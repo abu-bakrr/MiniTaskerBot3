@@ -1,26 +1,29 @@
 import { Heart, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useConfig } from "@/hooks/useConfig";
+import ProfileDropdown from "./ProfileDropdown";
 
 interface HeaderProps {
   onFavoritesClick?: () => void;
   onCartClick?: () => void;
   favoritesCount?: number;
   cartCount?: number;
+  showProfile?: boolean;
 }
 
 export default function Header({ 
   onFavoritesClick, 
   onCartClick,
   favoritesCount = 0,
-  cartCount = 0 
+  cartCount = 0,
+  showProfile = true
 }: HeaderProps) {
   const { config } = useConfig();
   const logoSize = config?.logoSize || 32;
 
   return (
     <header className="sticky top-0 z-50 bg-background border-b border-border px-4 py-3" data-testid="header-main">
-      <div className="max-w-[420px] mx-auto flex items-center justify-between">
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-2">
           {config?.logo && (
             <img 
@@ -65,6 +68,8 @@ export default function Header({
               </span>
             )}
           </Button>
+
+          {showProfile && <ProfileDropdown />}
         </div>
       </div>
     </header>
