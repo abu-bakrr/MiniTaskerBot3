@@ -48,8 +48,8 @@ export default function FilterBar({
   const hasActiveFilters = selectedCategory !== "all" || priceFrom !== "" || priceTo !== "" || selectedSort !== "new" || searchQuery !== "";
 
   return (
-    <div className="sticky top-[61px] z-40 bg-background border-b border-border py-3" data-testid="filter-bar">
-      <div className="max-w-[420px] mx-auto px-4">
+    <div className="sticky top-[61px] md:top-[69px] z-40 bg-background border-b border-border py-3 md:py-4" data-testid="filter-bar">
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
         {/* Search Bar */}
         <div className="relative mb-3">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

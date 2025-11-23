@@ -3,7 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CartItem from "@/components/CartItem";
 import OrderModal from "@/components/OrderModal";
-import { useTelegram } from "@/contexts/TelegramContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/queryClient";
 import { useConfig } from "@/hooks/useConfig";
 
@@ -32,7 +32,7 @@ export default function Cart({
 }: CartProps) {
   const { formatPrice } = useConfig();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { user } = useTelegram();
+  const { user } = useAuth();
 
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
@@ -72,8 +72,8 @@ export default function Cart({
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="sticky top-0 z-50 bg-background border-b border-border px-4 py-3">
-        <div className="max-w-[420px] mx-auto flex items-center justify-between">
+      <div className="sticky top-0 z-50 bg-background border-b border-border px-4 md:px-6 py-3 md:py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Button
               size="icon"
@@ -99,7 +99,7 @@ export default function Cart({
         </div>
       </div>
 
-      <div className="max-w-[420px] mx-auto p-4">
+      <div className="max-w-7xl mx-auto p-4 md:p-6">
         {items.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-6xl mb-4">🛒</div>

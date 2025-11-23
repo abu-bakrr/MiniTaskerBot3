@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
-import { useTelegram } from '@/contexts/TelegramContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CartItem {
   id: string;
@@ -15,7 +15,7 @@ interface CartItem {
 }
 
 export function useCart() {
-  const { user } = useTelegram();
+  const { user } = useAuth();
   const userId = user?.id;
 
   // Fetch cart items

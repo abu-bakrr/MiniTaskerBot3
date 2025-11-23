@@ -3,7 +3,6 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { TelegramProvider, useTelegram } from "@/contexts/TelegramContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/hooks/useCart";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -31,11 +30,7 @@ function AppContent() {
   const [selectedProductId, setSelectedProductId] = useState<string>('');
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   
-  const { user: authUser, isLoading: isAuthLoading } = useAuth();
-  const { user: telegramUser, isLoading: isTelegramLoading } = useTelegram();
-  
-  const user = authUser || telegramUser;
-  const isUserLoading = isAuthLoading || isTelegramLoading;
+  const { user, isLoading: isUserLoading } = useAuth();
 
   const { 
     cartItems, 
@@ -199,8 +194,8 @@ function AppContent() {
   };
 
   return (
-    <div className="w-full mx-auto bg-background min-h-screen md:max-w-7xl">
-      <div className="md:max-w-7xl mx-auto">
+    <div className="w-full mx-auto bg-background min-h-screen">
+      <div className="w-full">
         {currentPage === 'home' && (
           <Home
             onCartClick={handleCartClick}
@@ -258,14 +253,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <TelegramProvider>
-          <AuthProvider>
-            <ThemeApplier />
-            <FontLoader />
-            <AppContent />
-            <Toaster />
-          </AuthProvider>
-        </TelegramProvider>
+        <AuthProvider>
+          <ThemeApplier />
+          <FontLoader />
+          <AppContent />
+          <Toaster />
+        </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

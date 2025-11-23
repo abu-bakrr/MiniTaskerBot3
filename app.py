@@ -2,13 +2,11 @@ from flask import Flask, jsonify, request, send_from_directory, Blueprint, sessi
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import os
-import requests
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
-import secrets
 
 app = Flask(__name__, static_folder='dist/public', static_url_path='')
-app.secret_key = os.environ.get("SESSION_SECRET", secrets.token_hex(32))
+app.secret_key = os.environ.get("SESSION_SECRET")
 
 # Create API Blueprint with /api prefix for Render deployment
 api = Blueprint('api', __name__, url_prefix='/api')
@@ -314,47 +312,6 @@ def remove_from_favorites(user_id, product_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Telegram Auth
-@app.route('/api/auth/telegram', methods=['POST'])
-def telegram_auth():
-    try:
-        data = request.json
-        telegram_id = data.get('telegram_id')
-        first_name = data.get('first_name', '')
-        last_name = data.get('last_name', '')
-        username = data.get('username', '')
-        
-        if not telegram_id:
-            return jsonify({'error': 'telegram_id is required'}), 400
-        
-        conn = get_db_connection()
-        cur = conn.cursor()
-        
-        # Check if user exists
-        cur.execute('SELECT * FROM users WHERE telegram_id = %s', (telegram_id,))
-        user = cur.fetchone()
-        
-        if user:
-            # User exists, return user data
-            session['user_id'] = user['id']
-            cur.close()
-            conn.close()
-            return jsonify({'user': user, 'is_new': False})
-        else:
-            # Create new user
-            cur.execute(
-                'INSERT INTO users (telegram_id, username, first_name, last_name) VALUES (%s, %s, %s, %s) RETURNING *',
-                (telegram_id, username, first_name, last_name)
-            )
-            new_user = cur.fetchone()
-            conn.commit()
-            session['user_id'] = new_user['id']
-            cur.close()
-            conn.close()
-            return jsonify({'user': new_user, 'is_new': True}), 201
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
 # Email/Password Auth
 @app.route('/api/auth/register', methods=['POST'])
 def register():
@@ -608,117 +565,6 @@ def clear_cart(user_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Telegram notification function
-def send_telegram_notification(user_info, cart_items, total):
-    bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
-    chat_id = os.getenv('TELEGRAM_CHAT_ID')
-    
-    print(f"🔔 Attempting to send Telegram notification...")
-    print(f"Bot token exists: {bool(bot_token)}")
-    print(f"Chat ID exists: {bool(chat_id)}")
-    
-    if not bot_token or not chat_id:
-        print("❌ Telegram credentials not configured")
-        return False
-    
-    # Format the order message with detailed information
-    first_name = user_info.get('first_name', '')
-    last_name = user_info.get('last_name', '')
-    username = user_info.get('username', '')
-    telegram_id = user_info.get('telegram_id')
-    user_id = user_info.get('id', '')
-    
-    # Build full name
-    full_name = f"{first_name} {last_name}".strip()
-    if not full_name:
-        full_name = username or 'Неизвестный'
-    
-    # HTML escape helper function
-    def escape_html(text):
-        if text is None:
-            return ''
-        return str(text).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-    
-    # Calculate order details
-    total_items = sum(item['quantity'] for item in cart_items)
-    order_time = datetime.now().strftime('%d.%m.%Y в %H:%M')
-    
-    # Start building message with HTML formatting
-    message = "🔔 <b>НОВЫЙ ЗАКАЗ</b>\n"
-    message += "========================\n\n"
-    
-    # User information section
-    message += "👤 <b>ИНФОРМАЦИЯ О КЛИЕНТЕ</b>\n"
-    message += f"ФИО: <b>{escape_html(full_name)}</b>\n"
-    
-    if username:
-        message += f"Username: @{escape_html(username)}\n"
-    
-    if telegram_id:
-        message += f"Telegram ID: {telegram_id}\n"
-    
-    message += f"ID пользователя: {escape_html(user_id)}\n"
-    message += f"Дата заказа: {order_time}\n\n"
-    
-    # Order details section
-    message += "📦 <b>ДЕТАЛИ ЗАКАЗА</b>\n"
-    message += f"Всего позиций: {len(cart_items)} шт.\n"
-    message += f"Общее количество: {total_items} ед.\n\n"
-    
-    # Items list
-    message += "🛒 <b>СОСТАВ ЗАКАЗА</b>\n"
-    for idx, item in enumerate(cart_items, 1):
-        item_name = escape_html(item['name'])
-        item_quantity = item['quantity']
-        item_price = item['price']
-        item_total = item_price * item_quantity
-        
-        message += f"{idx}. <b>{item_name}</b>\n"
-        
-        # Show selected color if exists
-        if item.get('selected_color'):
-            message += f"   Цвет: {escape_html(item['selected_color'])}\n"
-        
-        # Show selected attributes if exists
-        if item.get('selected_attributes'):
-            import json as json_lib
-            attrs = item['selected_attributes']
-            if isinstance(attrs, str):
-                attrs = json_lib.loads(attrs)
-            if attrs:
-                for attr_name, attr_value in attrs.items():
-                    message += f"   {escape_html(attr_name)}: {escape_html(attr_value)}\n"
-        
-        message += f"   Цена: {item_price:,} сум x {item_quantity} шт.\n"
-        message += f"   Сумма: <b>{item_total:,} сум</b>\n\n"
-    
-    # Total section
-    message += "========================\n"
-    message += f"💰 <b>ИТОГО К ОПЛАТЕ: {total:,} сум</b>\n"
-    message += "========================"
-    
-    # Send message via Telegram Bot API
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    payload = {
-        'chat_id': chat_id,
-        'text': message,
-        'parse_mode': 'HTML'
-    }
-    
-    try:
-        print(f"📤 Sending message to Telegram...")
-        print(f"Message preview: {message[:100]}...")
-        response = requests.post(url, json=payload, timeout=10)
-        if response.status_code == 200:
-            print(f"✅ Telegram notification sent successfully!")
-            return True
-        else:
-            print(f"❌ Telegram API error (status {response.status_code}): {response.text}")
-            return False
-    except Exception as e:
-        print(f"❌ Failed to send Telegram notification: {e}")
-        return False
-
 # Order endpoint
 @app.route('/api/orders', methods=['POST'])
 def create_order():
@@ -768,13 +614,6 @@ def create_order():
             )
         
         print(f"✅ Order saved to database: {order_id}")
-        
-        # Send Telegram notification
-        notification_sent = send_telegram_notification(user_info, cart_items, total)
-        if notification_sent:
-            print(f"✅ Order notification sent successfully")
-        else:
-            print(f"⚠️ Order notification failed to send")
         
         # Clear the cart after order
         cur.execute('DELETE FROM cart WHERE user_id = %s', (user_id,))
@@ -855,10 +694,6 @@ def api_add_to_favorites():
 @api.route('/favorites/<user_id>/<product_id>', methods=['DELETE'])
 def api_remove_from_favorites(user_id, product_id):
     return remove_from_favorites(user_id, product_id)
-
-@api.route('/auth/telegram', methods=['POST'])
-def api_auth_telegram():
-    return telegram_auth()
 
 @api.route('/cart/<user_id>', methods=['GET'])
 def api_get_cart(user_id):

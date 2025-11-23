@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
-import { useTelegram } from '@/contexts/TelegramContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface FavoriteItem {
   id: string;
@@ -12,7 +12,7 @@ interface FavoriteItem {
 }
 
 export function useFavorites() {
-  const { user } = useTelegram();
+  const { user } = useAuth();
   const userId = user?.id;
 
   // Fetch favorites

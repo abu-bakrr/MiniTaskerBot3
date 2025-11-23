@@ -29,8 +29,8 @@ export default function Favorites({
 }: FavoritesProps) {
   return (
     <div className="min-h-screen bg-background">
-      <div className="sticky top-0 z-50 bg-background border-b border-border px-4 py-3">
-        <div className="max-w-[420px] mx-auto flex items-center justify-between">
+      <div className="sticky top-0 z-50 bg-background border-b border-border px-4 md:px-6 py-3 md:py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Button
               size="icon"
@@ -56,7 +56,7 @@ export default function Favorites({
         </div>
       </div>
 
-      <div className="max-w-[420px] mx-auto">
+      <div className="w-full">
         {items.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-6xl mb-4">❤️</div>
