@@ -193,6 +193,14 @@ function AppContent() {
     setCurrentPage('favorites');
   };
 
+  const handleAccountClick = () => {
+    if (!user) {
+      setCurrentPage('login');
+    } else {
+      setCurrentPage('login');
+    }
+  };
+
   return (
     <div className="w-full mx-auto bg-background min-h-screen">
       <div className="w-full">
@@ -200,7 +208,7 @@ function AppContent() {
           <Home
             onCartClick={handleCartClick}
             onFavoritesClick={handleFavoritesClick}
-            onLoginClick={() => setCurrentPage('login')}
+            onAccountClick={handleAccountClick}
             onProductClick={handleProductClick}
             cartCount={cartCount}
             favoritesCount={transformedFavoriteItems.length}

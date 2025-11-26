@@ -1,4 +1,4 @@
-import { Heart, ShoppingCart, LogIn } from "lucide-react";
+import { Heart, ShoppingCart, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useConfig } from "@/hooks/useConfig";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,19 +7,17 @@ import ProfileDropdown from "./ProfileDropdown";
 interface HeaderProps {
   onFavoritesClick?: () => void;
   onCartClick?: () => void;
-  onLoginClick?: () => void;
+  onAccountClick?: () => void;
   favoritesCount?: number;
   cartCount?: number;
-  showProfile?: boolean;
 }
 
 export default function Header({ 
   onFavoritesClick, 
   onCartClick,
-  onLoginClick,
+  onAccountClick,
   favoritesCount = 0,
-  cartCount = 0,
-  showProfile = true
+  cartCount = 0
 }: HeaderProps) {
   const { config } = useConfig();
   const { user } = useAuth();
@@ -43,18 +41,17 @@ export default function Header({
         </div>
         
         <div className="flex items-center gap-2">
-          {user && showProfile ? (
+          {user ? (
             <ProfileDropdown />
           ) : (
             <Button
+              size="icon"
               variant="ghost"
-              size="sm"
-              onClick={onLoginClick}
-              className="gap-1"
-              data-testid="button-login"
+              onClick={onAccountClick}
+              className="relative"
+              data-testid="button-account"
             >
-              <LogIn className="w-4 h-4" />
-              <span className="text-sm">Войти</span>
+              <User className="w-5 h-5" />
             </Button>
           )}
           
