@@ -88,20 +88,22 @@ export default function AdminProducts() {
       try {
         const formDataUpload = new FormData();
         formDataUpload.append('file', file);
-        formDataUpload.append('upload_preset', 'telegram_shop_products');
 
-        const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'demo';
-        const response = await fetch(
-          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-          { method: 'POST', body: formDataUpload }
-        );
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formDataUpload
+        });
 
         if (response.ok) {
           const data = await response.json();
           newImages.push(data.secure_url);
+        } else {
+          const error = await response.json();
+          toast({ title: 'Ошибка загрузки', description: error.error || 'Не удалось загрузить изображение', variant: 'destructive' });
         }
       } catch (error) {
         console.error('Upload error:', error);
+        toast({ title: 'Ошибка', description: 'Не удалось загрузить изображение', variant: 'destructive' });
       }
     }
 

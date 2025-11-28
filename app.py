@@ -6,6 +6,8 @@ import json
 import base64
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
+import cloudinary
+import cloudinary.uploader
 
 app = Flask(__name__, static_folder='dist/public', static_url_path='/static')
 app.secret_key = os.environ.get("SESSION_SECRET")
@@ -2030,6 +2032,52 @@ def api_create_order():
 @api.route('/orders/checkout', methods=['POST'])
 def api_checkout_order():
     return checkout_order()
+
+# ============================================================
+# Image Upload Endpoint (Cloudinary)
+# ============================================================
+
+@app.route('/api/upload', methods=['POST'])
+def upload_image():
+    """Upload image to Cloudinary using server-side credentials"""
+    try:
+        admin_id = require_admin()
+        if not admin_id:
+            return jsonify({'error': 'Доступ запрещён. Требуются права администратора.'}), 403
+        
+        cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME')
+        api_key = os.getenv('CLOUDINARY_API_KEY')
+        api_secret = os.getenv('CLOUDINARY_API_SECRET')
+        
+        if not all([cloud_name, api_key, api_secret]):
+            return jsonify({'error': 'Cloudinary не настроен. Добавьте CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET в переменные окружения.'}), 500
+        
+        cloudinary.config(
+            cloud_name=cloud_name,
+            api_key=api_key,
+            api_secret=api_secret
+        )
+        
+        if 'file' not in request.files:
+            return jsonify({'error': 'Файл не найден'}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'Файл не выбран'}), 400
+        
+        result = cloudinary.uploader.upload(
+            file,
+            folder='telegram_shop_products',
+            resource_type='image'
+        )
+        
+        return jsonify({
+            'secure_url': result['secure_url'],
+            'public_id': result['public_id']
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # Register the API blueprint
 app.register_blueprint(api)
