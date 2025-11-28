@@ -4,7 +4,6 @@ import Header from "@/components/Header";
 import FilterBar from "@/components/FilterBar";
 import ProductGrid from "@/components/ProductGrid";
 import Pagination from "@/components/Pagination";
-import { useConfig } from "@/hooks/useConfig";
 
 interface Product {
   id: string;
@@ -12,6 +11,12 @@ interface Product {
   price: number;
   images: string[];
   category_id: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  icon?: string;
 }
 
 interface HomeProps {
@@ -46,9 +51,10 @@ export default function Home({
   const [priceTo, setPriceTo] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Get categories from config
-  const { config } = useConfig();
-  const categories = config?.categories || [];
+  // Fetch categories from database API
+  const { data: categories = [] } = useQuery<Category[]>({
+    queryKey: ["/api/categories"],
+  });
 
   // Fetch products from API
   const { data: products = [], isLoading: isLoadingProducts } = useQuery<Product[]>({
