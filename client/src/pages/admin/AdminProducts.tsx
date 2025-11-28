@@ -7,7 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Search, X, Upload, Image } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, X, Upload, Image, Palette } from 'lucide-react';
+
+interface Attribute {
+  name: string;
+  values: string[];
+}
 
 interface Product {
   id: string;
@@ -17,7 +22,7 @@ interface Product {
   images: string[];
   category_id: string;
   colors: string[];
-  attributes: any;
+  attributes: Attribute[];
 }
 
 interface Category {
@@ -44,7 +49,12 @@ export default function AdminProducts() {
     images: [] as string[],
     category_id: '',
     colors: [] as string[],
+    attributes: [] as Attribute[],
   });
+
+  const [newColor, setNewColor] = useState('#000000');
+  const [newAttrName, setNewAttrName] = useState('');
+  const [newAttrValue, setNewAttrValue] = useState('');
 
   useEffect(() => {
     fetchProducts();
@@ -134,7 +144,11 @@ export default function AdminProducts() {
       images: [],
       category_id: '',
       colors: [],
+      attributes: [],
     });
+    setNewColor('#000000');
+    setNewAttrName('');
+    setNewAttrValue('');
     setIsDialogOpen(true);
   };
 
@@ -147,8 +161,72 @@ export default function AdminProducts() {
       images: product.images || [],
       category_id: product.category_id || '',
       colors: product.colors || [],
+      attributes: product.attributes || [],
     });
+    setNewColor('#000000');
+    setNewAttrName('');
+    setNewAttrValue('');
     setIsDialogOpen(true);
+  };
+
+  const addColor = () => {
+    if (newColor && !formData.colors.includes(newColor)) {
+      setFormData(prev => ({
+        ...prev,
+        colors: [...prev.colors, newColor]
+      }));
+    }
+  };
+
+  const removeColor = (colorToRemove: string) => {
+    setFormData(prev => ({
+      ...prev,
+      colors: prev.colors.filter(c => c !== colorToRemove)
+    }));
+  };
+
+  const addAttribute = () => {
+    if (newAttrName.trim()) {
+      const existingAttr = formData.attributes.find(a => a.name === newAttrName.trim());
+      if (!existingAttr) {
+        setFormData(prev => ({
+          ...prev,
+          attributes: [...prev.attributes, { name: newAttrName.trim(), values: [] }]
+        }));
+        setNewAttrName('');
+      }
+    }
+  };
+
+  const removeAttribute = (attrName: string) => {
+    setFormData(prev => ({
+      ...prev,
+      attributes: prev.attributes.filter(a => a.name !== attrName)
+    }));
+  };
+
+  const addAttrValue = (attrName: string, value: string) => {
+    if (value.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        attributes: prev.attributes.map(attr => 
+          attr.name === attrName && !attr.values.includes(value.trim())
+            ? { ...attr, values: [...attr.values, value.trim()] }
+            : attr
+        )
+      }));
+    }
+  };
+
+  const removeAttrValue = (attrName: string, valueToRemove: string) => {
+    setFormData(prev => ({
+      ...prev,
+      attributes: prev.attributes.map(attr => 
+        attr.name === attrName
+          ? { ...attr, values: attr.values.filter(v => v !== valueToRemove) }
+          : attr
+      )
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -162,6 +240,7 @@ export default function AdminProducts() {
         images: formData.images.length > 0 ? formData.images : ['https://via.placeholder.com/400x400?text=No+Image'],
         category_id: formData.category_id || null,
         colors: formData.colors,
+        attributes: formData.attributes.filter(attr => attr.values.length > 0),
       };
 
       const url = editingProduct 
@@ -329,6 +408,128 @@ export default function AdminProducts() {
                   Для загрузки изображений требуется настроенный Cloudinary
                 </p>
               </div>
+
+              <div className="space-y-2">
+                <Label>Цвета товара</Label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {formData.colors.map((color, idx) => (
+                    <div key={idx} className="flex items-center gap-1 bg-muted rounded-full px-2 py-1">
+                      <div 
+                        className="w-5 h-5 rounded-full border border-border" 
+                        style={{ backgroundColor: color }}
+                      />
+                      <span className="text-xs">{color}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeColor(color)}
+                        className="ml-1 text-muted-foreground hover:text-destructive"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={newColor}
+                    onChange={(e) => setNewColor(e.target.value)}
+                    className="w-12 h-9 rounded border cursor-pointer"
+                  />
+                  <Input
+                    value={newColor}
+                    onChange={(e) => setNewColor(e.target.value)}
+                    placeholder="#000000"
+                    className="w-28"
+                  />
+                  <Button type="button" variant="outline" onClick={addColor} size="sm">
+                    <Plus className="h-4 w-4 mr-1" />
+                    Добавить
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Характеристики (атрибуты)</Label>
+                <div className="space-y-3">
+                  {formData.attributes.map((attr, idx) => (
+                    <div key={idx} className="border rounded-lg p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-sm">{attr.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeAttribute(attr.name)}
+                          className="text-muted-foreground hover:text-destructive"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {attr.values.map((val, vIdx) => (
+                          <span key={vIdx} className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs px-2 py-1 rounded">
+                            {val}
+                            <button
+                              type="button"
+                              onClick={() => removeAttrValue(attr.name, val)}
+                              className="hover:text-destructive"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Значение (напр. S, M, L)"
+                          className="flex-1"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              addAttrValue(attr.name, (e.target as HTMLInputElement).value);
+                              (e.target as HTMLInputElement).value = '';
+                            }
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            const input = (e.target as HTMLElement).parentElement?.querySelector('input');
+                            if (input) {
+                              addAttrValue(attr.name, input.value);
+                              input.value = '';
+                            }
+                          }}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    value={newAttrName}
+                    onChange={(e) => setNewAttrName(e.target.value)}
+                    placeholder="Название атрибута (напр. Размер)"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addAttribute();
+                      }
+                    }}
+                  />
+                  <Button type="button" variant="outline" onClick={addAttribute}>
+                    <Plus className="h-4 w-4 mr-1" />
+                    Добавить атрибут
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Добавьте характеристики товара, например: Размер (S, M, L, XL), Материал (Хлопок, Полиэстер)
+                </p>
+              </div>
+
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Отмена

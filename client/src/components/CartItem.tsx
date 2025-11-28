@@ -9,6 +9,8 @@ interface CartItemProps {
   price: number;
   quantity: number;
   images: string[];
+  selected_color?: string;
+  selected_attributes?: Record<string, string>;
   onQuantityChange: (id: string, quantity: number) => void;
   onRemove: (id: string) => void;
 }
@@ -19,6 +21,8 @@ export default function CartItem({
   price,
   quantity,
   images,
+  selected_color,
+  selected_attributes,
   onQuantityChange,
   onRemove,
 }: CartItemProps) {
@@ -44,6 +48,26 @@ export default function CartItem({
         <h3 className="text-sm font-medium mb-1 line-clamp-2" data-testid={`text-cart-item-name-${id}`}>
           {name}
         </h3>
+        
+        {(selected_color || (selected_attributes && Object.keys(selected_attributes).length > 0)) && (
+          <div className="flex flex-wrap items-center gap-2 mb-1">
+            {selected_color && (
+              <div className="flex items-center gap-1">
+                <div 
+                  className="w-4 h-4 rounded-full border border-border" 
+                  style={{ backgroundColor: selected_color }}
+                  title={selected_color}
+                />
+              </div>
+            )}
+            {selected_attributes && Object.entries(selected_attributes).map(([key, value]) => (
+              <span key={key} className="text-xs bg-muted px-2 py-0.5 rounded">
+                {key}: {value}
+              </span>
+            ))}
+          </div>
+        )}
+        
         <p className="text-sm font-semibold mb-2" data-testid={`text-cart-item-price-${id}`}>
           {formatPrice(price)}
         </p>
