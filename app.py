@@ -349,21 +349,67 @@ def get_cloudinary_config():
         'api_secret': api_secret
     }
 
+def get_telegram_config():
+    """Get Telegram config from DB or env"""
+    bot_token = get_platform_setting('telegram_bot_token') or os.getenv('TELEGRAM_BOT_TOKEN')
+    admin_chat_id = get_platform_setting('telegram_admin_chat_id') or os.getenv('TELEGRAM_ADMIN_CHAT_ID')
+    notifications_enabled = get_platform_setting('telegram_notifications_enabled')
+    
+    return {
+        'bot_token': bot_token,
+        'admin_chat_id': admin_chat_id,
+        'notifications_enabled': notifications_enabled == 'true' if notifications_enabled else False
+    }
+
+def get_payment_config(provider):
+    """Get payment config from DB with fallback to env vars"""
+    if provider == 'click':
+        db_enabled = get_platform_setting('click_enabled')
+        env_enabled = os.getenv('CLICK_MERCHANT_ID') and os.getenv('CLICK_SERVICE_ID')
+        return {
+            'merchant_id': get_platform_setting('click_merchant_id') or os.getenv('CLICK_MERCHANT_ID') or '',
+            'service_id': get_platform_setting('click_service_id') or os.getenv('CLICK_SERVICE_ID') or '',
+            'secret_key': get_platform_setting('click_secret_key') or os.getenv('CLICK_SECRET_KEY') or '',
+            'enabled': db_enabled == 'true' if db_enabled else bool(env_enabled)
+        }
+    elif provider == 'payme':
+        db_enabled = get_platform_setting('payme_enabled')
+        env_enabled = os.getenv('PAYME_MERCHANT_ID')
+        return {
+            'merchant_id': get_platform_setting('payme_merchant_id') or os.getenv('PAYME_MERCHANT_ID') or '',
+            'key': get_platform_setting('payme_key') or os.getenv('PAYME_KEY') or '',
+            'enabled': db_enabled == 'true' if db_enabled else bool(env_enabled)
+        }
+    elif provider == 'uzum':
+        db_enabled = get_platform_setting('uzum_enabled')
+        env_enabled = os.getenv('UZUM_MERCHANT_ID')
+        return {
+            'merchant_id': get_platform_setting('uzum_merchant_id') or os.getenv('UZUM_MERCHANT_ID') or '',
+            'service_id': get_platform_setting('uzum_service_id') or os.getenv('UZUM_SERVICE_ID') or '',
+            'secret_key': get_platform_setting('uzum_secret_key') or os.getenv('UZUM_SECRET_KEY') or '',
+            'enabled': db_enabled == 'true' if db_enabled else bool(env_enabled)
+        }
+    elif provider == 'card_transfer':
+        db_enabled = get_platform_setting('card_transfer_enabled')
+        return {
+            'card_number': get_platform_setting('card_transfer_card_number') or '',
+            'card_holder': get_platform_setting('card_transfer_card_holder') or '',
+            'bank_name': get_platform_setting('card_transfer_bank_name') or '',
+            'enabled': db_enabled == 'true' if db_enabled else False
+        }
+    return {}
+
 # Telegram notification function
 def send_telegram_notification(order_data, order_items):
     """Send order notification to Telegram admin"""
     try:
-        config_path = os.path.join(os.path.dirname(__file__), 'config', 'settings.json')
-        with open(config_path, 'r', encoding='utf-8') as f:
-            config = json.load(f)
+        tg_config = get_telegram_config()
         
-        telegram_config = config.get('telegramNotifications', {})
-        
-        if not telegram_config.get('enabled'):
+        if not tg_config.get('notifications_enabled'):
             return False
         
-        bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
-        admin_chat_id = telegram_config.get('adminChatId') or os.getenv('TELEGRAM_ADMIN_CHAT_ID')
+        bot_token = tg_config.get('bot_token')
+        admin_chat_id = tg_config.get('admin_chat_id')
         
         if not bot_token or not admin_chat_id:
             print("Telegram notification: bot_token or admin_chat_id not configured")
@@ -1013,29 +1059,21 @@ def checkout_order():
         # Generate payment URL based on payment method
         payment_url = None
         
-        # Load payment config
-        config_path = os.path.join(os.path.dirname(__file__), 'config', 'settings.json')
-        with open(config_path, 'r', encoding='utf-8') as f:
-            config = json.load(f)
-        
-        payment_config = config.get('payment', {})
-        
         if payment_method == 'click':
-            click_config = payment_config.get('click', {})
-            merchant_id = click_config.get('merchantId') or os.getenv('CLICK_MERCHANT_ID')
-            service_id = click_config.get('serviceId') or os.getenv('CLICK_SERVICE_ID')
+            click_config = get_payment_config('click')
+            merchant_id = click_config.get('merchant_id')
+            service_id = click_config.get('service_id')
             
-            if merchant_id and service_id:
+            if merchant_id and service_id and click_config.get('enabled'):
                 # Click payment URL format
                 payment_url = f"https://my.click.uz/services/pay?service_id={service_id}&merchant_id={merchant_id}&amount={total}&transaction_param={order_id}"
                 
         elif payment_method == 'payme':
-            payme_config = payment_config.get('payme', {})
-            merchant_id = payme_config.get('merchantId') or os.getenv('PAYME_MERCHANT_ID')
+            payme_config = get_payment_config('payme')
+            merchant_id = payme_config.get('merchant_id')
             
-            if merchant_id:
+            if merchant_id and payme_config.get('enabled'):
                 # Payme payment URL format (amount in tiyins)
-                import base64
                 amount_tiyins = total * 100
                 # Encode account data
                 account_data = f"m={merchant_id};ac.order_id={order_id};a={amount_tiyins}"
@@ -1043,10 +1081,10 @@ def checkout_order():
                 payment_url = f"https://checkout.paycom.uz/{encoded}"
                 
         elif payment_method == 'uzum':
-            uzum_config = payment_config.get('uzum', {})
-            merchant_id = uzum_config.get('merchantId') or os.getenv('UZUM_MERCHANT_ID')
+            uzum_config = get_payment_config('uzum')
+            merchant_id = uzum_config.get('merchant_id')
             
-            if merchant_id:
+            if merchant_id and uzum_config.get('enabled'):
                 # Uzum Bank payment - they use webhook system
                 # For now, store order and redirect to Uzum payment page
                 payment_url = f"https://payment.apelsin.uz/merchant?merchantId={merchant_id}&amount={total}&orderId={order_id}"
@@ -1130,8 +1168,9 @@ def click_prepare():
         data = request.json or request.form.to_dict()
         print(f"Click prepare webhook: {data}")
         
-        # SECURITY: Verify signature
-        click_secret = os.getenv('CLICK_SECRET_KEY')
+        # SECURITY: Verify signature using DB-stored secret
+        click_config = get_payment_config('click')
+        click_secret = click_config.get('secret_key')
         if click_secret and not verify_click_signature(data, click_secret):
             print("Click signature verification failed")
             return jsonify({
@@ -1202,8 +1241,9 @@ def click_complete():
         data = request.json or request.form.to_dict()
         print(f"Click complete webhook: {data}")
         
-        # SECURITY: Verify signature
-        click_secret = os.getenv('CLICK_SECRET_KEY')
+        # SECURITY: Verify signature using DB-stored secret
+        click_config = get_payment_config('click')
+        click_secret = click_config.get('secret_key')
         if click_secret and not verify_click_signature(data, click_secret):
             print("Click signature verification failed")
             return jsonify({
@@ -2347,6 +2387,267 @@ def admin_test_cloudinary():
         return jsonify({'success': True, 'message': 'Подключение успешно'}), 200
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 200
+
+# ============================================================
+# Telegram Settings API
+# ============================================================
+
+@app.route('/api/admin/settings/telegram', methods=['GET'])
+def admin_get_telegram_settings():
+    try:
+        admin_id = require_admin()
+        if not admin_id:
+            return jsonify({'error': 'Not authorized'}), 401
+        
+        config = get_telegram_config()
+        return jsonify({
+            'has_bot_token': bool(config['bot_token']),
+            'admin_chat_id': config['admin_chat_id'] or '',
+            'notifications_enabled': config['notifications_enabled']
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/settings/telegram', methods=['PUT'])
+def admin_update_telegram_settings():
+    try:
+        admin_id = require_admin()
+        if not admin_id:
+            return jsonify({'error': 'Not authorized'}), 401
+        
+        data = request.json
+        bot_token = data.get('bot_token')
+        admin_chat_id = data.get('admin_chat_id', '')
+        notifications_enabled = data.get('notifications_enabled', False)
+        
+        if bot_token:
+            set_platform_setting('telegram_bot_token', bot_token, is_secret=True)
+        
+        set_platform_setting('telegram_admin_chat_id', admin_chat_id, is_secret=False)
+        set_platform_setting('telegram_notifications_enabled', 'true' if notifications_enabled else 'false', is_secret=False)
+        
+        return jsonify({'message': 'Настройки Telegram сохранены'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/settings/telegram/test', methods=['POST'])
+def admin_test_telegram():
+    try:
+        admin_id = require_admin()
+        if not admin_id:
+            return jsonify({'error': 'Not authorized'}), 401
+        
+        config = get_telegram_config()
+        if not config['bot_token']:
+            return jsonify({'success': False, 'error': 'Bot Token не настроен'}), 200
+        
+        if not config['admin_chat_id']:
+            return jsonify({'success': False, 'error': 'Chat ID не настроен'}), 200
+        
+        url = f"https://api.telegram.org/bot{config['bot_token']}/sendMessage"
+        payload = {
+            'chat_id': config['admin_chat_id'],
+            'text': '✅ Тестовое сообщение от магазина!\n\nНастройки Telegram работают корректно.',
+            'parse_mode': 'HTML'
+        }
+        
+        response = requests.post(url, json=payload, timeout=10)
+        
+        if response.status_code == 200:
+            return jsonify({'success': True, 'message': 'Тестовое сообщение отправлено'}), 200
+        else:
+            error_data = response.json()
+            return jsonify({'success': False, 'error': error_data.get('description', 'Ошибка отправки')}), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 200
+
+# ============================================================
+# Payment Settings API
+# ============================================================
+
+@app.route('/api/admin/settings/payments', methods=['GET'])
+def admin_get_payment_settings():
+    try:
+        admin_id = require_admin()
+        if not admin_id:
+            return jsonify({'error': 'Not authorized'}), 401
+        
+        click_config = get_payment_config('click')
+        payme_config = get_payment_config('payme')
+        uzum_config = get_payment_config('uzum')
+        card_config = get_payment_config('card_transfer')
+        
+        return jsonify({
+            'click': {
+                'merchant_id': click_config['merchant_id'],
+                'service_id': click_config['service_id'],
+                'has_secret_key': bool(click_config['secret_key']),
+                'enabled': click_config['enabled']
+            },
+            'payme': {
+                'merchant_id': payme_config['merchant_id'],
+                'has_key': bool(payme_config['key']),
+                'enabled': payme_config['enabled']
+            },
+            'uzum': {
+                'merchant_id': uzum_config['merchant_id'],
+                'service_id': uzum_config['service_id'],
+                'has_secret_key': bool(uzum_config['secret_key']),
+                'enabled': uzum_config['enabled']
+            },
+            'card_transfer': {
+                'card_number': card_config['card_number'],
+                'card_holder': card_config['card_holder'],
+                'bank_name': card_config['bank_name'],
+                'enabled': card_config['enabled']
+            }
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/settings/payments/click', methods=['PUT'])
+def admin_update_click_settings():
+    try:
+        admin_id = require_admin()
+        if not admin_id:
+            return jsonify({'error': 'Not authorized'}), 401
+        
+        data = request.json
+        merchant_id = data.get('merchant_id', '')
+        service_id = data.get('service_id', '')
+        secret_key = data.get('secret_key')
+        enabled = data.get('enabled', False)
+        
+        set_platform_setting('click_merchant_id', merchant_id, is_secret=False)
+        set_platform_setting('click_service_id', service_id, is_secret=False)
+        set_platform_setting('click_enabled', 'true' if enabled else 'false', is_secret=False)
+        
+        if secret_key:
+            set_platform_setting('click_secret_key', secret_key, is_secret=True)
+        
+        return jsonify({'message': 'Настройки Click сохранены'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/settings/payments/payme', methods=['PUT'])
+def admin_update_payme_settings():
+    try:
+        admin_id = require_admin()
+        if not admin_id:
+            return jsonify({'error': 'Not authorized'}), 401
+        
+        data = request.json
+        merchant_id = data.get('merchant_id', '')
+        key = data.get('key')
+        enabled = data.get('enabled', False)
+        
+        set_platform_setting('payme_merchant_id', merchant_id, is_secret=False)
+        set_platform_setting('payme_enabled', 'true' if enabled else 'false', is_secret=False)
+        
+        if key:
+            set_platform_setting('payme_key', key, is_secret=True)
+        
+        return jsonify({'message': 'Настройки Payme сохранены'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/settings/payments/uzum', methods=['PUT'])
+def admin_update_uzum_settings():
+    try:
+        admin_id = require_admin()
+        if not admin_id:
+            return jsonify({'error': 'Not authorized'}), 401
+        
+        data = request.json
+        merchant_id = data.get('merchant_id', '')
+        service_id = data.get('service_id', '')
+        secret_key = data.get('secret_key')
+        enabled = data.get('enabled', False)
+        
+        set_platform_setting('uzum_merchant_id', merchant_id, is_secret=False)
+        set_platform_setting('uzum_service_id', service_id, is_secret=False)
+        set_platform_setting('uzum_enabled', 'true' if enabled else 'false', is_secret=False)
+        
+        if secret_key:
+            set_platform_setting('uzum_secret_key', secret_key, is_secret=True)
+        
+        return jsonify({'message': 'Настройки Uzum сохранены'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/settings/payments/card_transfer', methods=['PUT'])
+def admin_update_card_transfer_settings():
+    try:
+        admin_id = require_admin()
+        if not admin_id:
+            return jsonify({'error': 'Not authorized'}), 401
+        
+        data = request.json
+        card_number = data.get('card_number', '')
+        card_holder = data.get('card_holder', '')
+        bank_name = data.get('bank_name', '')
+        enabled = data.get('enabled', False)
+        
+        set_platform_setting('card_transfer_card_number', card_number, is_secret=False)
+        set_platform_setting('card_transfer_card_holder', card_holder, is_secret=False)
+        set_platform_setting('card_transfer_bank_name', bank_name, is_secret=False)
+        set_platform_setting('card_transfer_enabled', 'true' if enabled else 'false', is_secret=False)
+        
+        return jsonify({'message': 'Настройки перевода на карту сохранены'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ============================================================
+# Yandex Maps Settings API
+# ============================================================
+
+def get_yandex_maps_config():
+    """Get Yandex Maps config from DB"""
+    return {
+        'api_key': get_platform_setting('yandex_maps_api_key') or '',
+        'default_lat': get_platform_setting('yandex_maps_default_lat') or '41.311081',
+        'default_lng': get_platform_setting('yandex_maps_default_lng') or '69.240562',
+        'default_zoom': get_platform_setting('yandex_maps_default_zoom') or '12'
+    }
+
+@app.route('/api/admin/settings/yandex_maps', methods=['GET'])
+def admin_get_yandex_maps_settings():
+    try:
+        admin_id = require_admin()
+        if not admin_id:
+            return jsonify({'error': 'Not authorized'}), 401
+        
+        config = get_yandex_maps_config()
+        return jsonify({
+            'api_key': config['api_key'],
+            'default_lat': config['default_lat'],
+            'default_lng': config['default_lng'],
+            'default_zoom': config['default_zoom']
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/settings/yandex_maps', methods=['PUT'])
+def admin_update_yandex_maps_settings():
+    try:
+        admin_id = require_admin()
+        if not admin_id:
+            return jsonify({'error': 'Not authorized'}), 401
+        
+        data = request.json
+        api_key = data.get('api_key', '')
+        default_lat = data.get('default_lat', '41.311081')
+        default_lng = data.get('default_lng', '69.240562')
+        default_zoom = data.get('default_zoom', '12')
+        
+        set_platform_setting('yandex_maps_api_key', api_key, is_secret=False)
+        set_platform_setting('yandex_maps_default_lat', default_lat, is_secret=False)
+        set_platform_setting('yandex_maps_default_lng', default_lng, is_secret=False)
+        set_platform_setting('yandex_maps_default_zoom', default_zoom, is_secret=False)
+        
+        return jsonify({'message': 'Настройки Яндекс.Карт сохранены'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # Register the API blueprint
 app.register_blueprint(api)

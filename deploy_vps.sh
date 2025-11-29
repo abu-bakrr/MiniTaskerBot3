@@ -80,81 +80,7 @@ fi
 read -p "Введите порт для приложения [5000]: " APP_PORT
 APP_PORT=${APP_PORT:-5000}
 
-echo ""
-echo "🤖 НАСТРОЙКА TELEGRAM БОТА"
-echo ""
-echo "Следующие параметры нужны для работы Telegram бота управления товарами:"
-echo ""
-
-read -p "Введите токен Telegram бота (от @BotFather): " TELEGRAM_BOT_TOKEN
-while [ -z "$TELEGRAM_BOT_TOKEN" ]; do
-    print_error "Токен бота не может быть пустым!"
-    read -p "Введите токен Telegram бота (от @BotFather): " TELEGRAM_BOT_TOKEN
-done
-
-read -p "Введите ваш Telegram ID (для доступа к боту): " TELEGRAM_ADMIN_ID
-while [ -z "$TELEGRAM_ADMIN_ID" ]; do
-    print_error "Telegram ID не может быть пустым!"
-    read -p "Введите ваш Telegram ID: " TELEGRAM_ADMIN_ID
-done
-
-echo ""
-echo "📬 НАСТРОЙКА УВЕДОМЛЕНИЙ О ЗАКАЗАХ"
-echo ""
-echo "Для получения уведомлений о новых заказах в Telegram:"
-echo ""
-
-read -p "Введите Chat ID для уведомлений о заказах (ваш Telegram ID или ID группы): " TELEGRAM_CHAT_ID
-while [ -z "$TELEGRAM_CHAT_ID" ]; do
-    print_error "Chat ID не может быть пустым!"
-    read -p "Введите Chat ID для уведомлений: " TELEGRAM_CHAT_ID
-done
-
-print_step "Настройки уведомлений сохранены"
-echo ""
-
-read -p "Введите Cloudinary Cloud Name: " CLOUDINARY_CLOUD_NAME
-while [ -z "$CLOUDINARY_CLOUD_NAME" ]; do
-    print_error "Cloudinary Cloud Name не может быть пустым!"
-    read -p "Введите Cloudinary Cloud Name: " CLOUDINARY_CLOUD_NAME
-done
-
-read -p "Введите Cloudinary API Key: " CLOUDINARY_API_KEY
-while [ -z "$CLOUDINARY_API_KEY" ]; do
-    print_error "Cloudinary API Key не может быть пустым!"
-    read -p "Введите Cloudinary API Key: " CLOUDINARY_API_KEY
-done
-
-read -sp "Введите Cloudinary API Secret: " CLOUDINARY_API_SECRET
-echo
-while [ -z "$CLOUDINARY_API_SECRET" ]; do
-    print_error "Cloudinary API Secret не может быть пустым!"
-    read -sp "Введите Cloudinary API Secret: " CLOUDINARY_API_SECRET
-    echo
-done
-
-print_step "Данные Telegram бота сохранены"
-
-echo ""
-echo "💬 НАСТРОЙКА ИНФОРМАЦИОННОГО БОТА"
-echo ""
-echo "Дополнительный бот для ответов на команды (необязательно):"
-echo ""
-
-read -p "Установить информационный бот? (yes/no) [no]: " INSTALL_INFO_BOT
-INSTALL_INFO_BOT=${INSTALL_INFO_BOT:-no}
-
-if [ "$INSTALL_INFO_BOT" = "yes" ]; then
-    read -p "Введите токен информационного бота (от @BotFather): " INFO_BOT_TOKEN
-    while [ -z "$INFO_BOT_TOKEN" ]; do
-        print_error "Токен не может быть пустым!"
-        read -p "Введите токен информационного бота: " INFO_BOT_TOKEN
-    done
-    print_step "Информационный бот будет установлен"
-else
-    print_step "Информационный бот пропущен"
-fi
-echo ""
+print_step "Настройки приложения сохранены"
 
 # Установка пакетов
 print_step "Обновление системы и установка пакетов..."
@@ -231,7 +157,8 @@ echo ""
 echo "Удаленный доступ позволит подключаться к БД с другого компьютера"
 echo "(например, для запуска Telegram бота локально на Windows/Mac)"
 echo ""
-read -p "Открыть удаленный доступ к PostgreSQL? (yes/no): " ENABLE_REMOTE_DB
+read -p "Открыть удаленный доступ к PostgreSQL? (yes/no) [no]: " ENABLE_REMOTE_DB
+ENABLE_REMOTE_DB=${ENABLE_REMOTE_DB:-no}
 
 if [ "$ENABLE_REMOTE_DB" = "yes" ]; then
     print_step "Настройка PostgreSQL для удаленного доступа..."
@@ -312,7 +239,7 @@ else
     print_step "Локальные файлы скопированы"
 fi
 
-# Создание .env файла
+# Создание .env файла (минимальные настройки)
 print_step "Создание файла .env..."
 SESSION_SECRET=$(openssl rand -hex 32)
 cat > $APP_DIR/.env <<EOF
@@ -320,69 +247,12 @@ DATABASE_URL=postgresql://$DB_USER:$DB_PASSWORD@localhost:5432/$DB_NAME
 PORT=$APP_PORT
 FLASK_ENV=production
 SESSION_SECRET=$SESSION_SECRET
-TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN
-TELEGRAM_CHAT_ID=$TELEGRAM_CHAT_ID
 EOF
 
 chown $APP_USER:$APP_USER $APP_DIR/.env
 chmod 600 $APP_DIR/.env
 
-# Создание .env файла для Telegram бота
-print_step "Создание файла .env для Telegram бота..."
-cat > $APP_DIR/telegram_bot/.env <<EOF
-DATABASE_URL=postgresql://$DB_USER:$DB_PASSWORD@localhost:5432/$DB_NAME
-TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN
-CLOUDINARY_CLOUD_NAME=$CLOUDINARY_CLOUD_NAME
-CLOUDINARY_API_KEY=$CLOUDINARY_API_KEY
-CLOUDINARY_API_SECRET=$CLOUDINARY_API_SECRET
-EOF
-
-chown $APP_USER:$APP_USER $APP_DIR/telegram_bot/.env
-chmod 600 $APP_DIR/telegram_bot/.env
-print_step "Файл .env для Telegram бота создан"
-
-# Синхронизация категорий и настройка settingsbot.json
-print_step "Синхронизация категорий и настройка Telegram бота..."
-export APP_DIR
-ADMIN_ID="$TELEGRAM_ADMIN_ID" python3 <<'PYTHON_SCRIPT'
-import json
-import os
-
-# Пути к файлам
-config_path = os.environ.get('APP_DIR') + "/config/settings.json"
-settingsbot_path = os.environ.get('APP_DIR') + "/telegram_bot/settingsbot.json"
-admin_id = os.environ.get('ADMIN_ID', '')
-
-# Читаем категории из config/settings.json
-with open(config_path, 'r', encoding='utf-8') as f:
-    config = json.load(f)
-    categories = config.get('categories', [])
-
-# Читаем settingsbot.json
-with open(settingsbot_path, 'r', encoding='utf-8') as f:
-    settingsbot = json.load(f)
-
-# Обновляем категории и admin ID
-settingsbot['categories'] = categories
-
-# Преобразуем admin_id в int, убираем @ если есть
-admin_id_clean = admin_id.strip().lstrip('@')
-try:
-    admin_id_int = int(admin_id_clean)
-    settingsbot['authorized_users'] = [admin_id_int]
-except ValueError:
-    print(f"⚠️ Внимание: {admin_id} не является числовым ID")
-    print("Оставляем существующий список авторизованных пользователей")
-
-# Сохраняем обновленный settingsbot.json
-with open(settingsbot_path, 'w', encoding='utf-8') as f:
-    json.dump(settingsbot, f, ensure_ascii=False, indent=2)
-
-print("✅ Категории синхронизированы и Admin ID добавлен")
-PYTHON_SCRIPT
-
-chown $APP_USER:$APP_USER $APP_DIR/telegram_bot/settingsbot.json
-print_step "Настройка Telegram бота завершена"
+print_step "Файл .env создан"
 
 # Установка зависимостей и сборка
 print_step "Установка зависимостей и сборка приложения..."
@@ -474,60 +344,6 @@ else
     exit 1
 fi
 
-# Установка информационного бота (если выбрано)
-if [ "$INSTALL_INFO_BOT" = "yes" ]; then
-    print_step "Настройка информационного бота..."
-    
-    # Создание .env файла для информационного бота
-    cat > $APP_DIR/bot/.env <<EOF
-INFO_BOT_TOKEN=$INFO_BOT_TOKEN
-EOF
-    
-    chown $APP_USER:$APP_USER $APP_DIR/bot/.env
-    chmod 600 $APP_DIR/bot/.env
-    
-    # Установка зависимостей для информационного бота
-    sudo -u $APP_USER bash <<EOF
-cd $APP_DIR/bot
-python3 -m venv venv
-source venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
-EOF
-    
-    # Создание systemd сервиса для информационного бота
-    cat > /etc/systemd/system/info-bot.service <<EOF
-[Unit]
-Description=Telegram Info Bot
-After=network.target
-
-[Service]
-Type=simple
-User=$APP_USER
-WorkingDirectory=$APP_DIR/bot
-Environment="PATH=$APP_DIR/bot/venv/bin"
-ExecStart=$APP_DIR/bot/venv/bin/python main.py
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-EOF
-    
-    # Запуск информационного бота
-    systemctl daemon-reload
-    systemctl enable info-bot
-    systemctl start info-bot
-    
-    # Проверка статуса
-    sleep 2
-    if systemctl is-active --quiet info-bot; then
-        print_step "Информационный бот успешно запущен!"
-    else
-        print_warning "Ошибка запуска информационного бота. Проверьте логи: journalctl -u info-bot -n 50"
-    fi
-fi
-
 # Настройка Nginx
 print_step "Настройка Nginx..."
 cat > /etc/nginx/sites-available/shop <<EOF
@@ -610,7 +426,7 @@ echo "=================================================="
 echo ""
 echo "Хотите настроить домен и SSL сертификат?"
 echo "⚠️  ВАЖНО: Перед настройкой убедитесь, что:"
-echo "   1. У вас есть домен в Hostinger"
+echo "   1. У вас есть домен"
 echo "   2. DNS A-запись указывает на IP этого сервера: $(hostname -I | awk '{print $1}')"
 echo "   3. DNS изменения уже вступили в силу (может занять до 24 часов)"
 echo ""
@@ -749,53 +565,14 @@ echo "  - Проверить статус: systemctl status shop-app"
 echo "  - Просмотреть логи: journalctl -u shop-app -f"
 echo "  - Перезапустить: systemctl restart shop-app"
 echo ""
-
-if [ "$INSTALL_INFO_BOT" = "yes" ]; then
-    echo "💬 Информационный бот:"
-    echo "  - Проверить статус: systemctl status info-bot"
-    echo "  - Просмотреть логи: journalctl -u info-bot -f"
-    echo "  - Перезапустить: systemctl restart info-bot"
-    echo ""
-fi
-
+echo "⚙️ СЛЕДУЮЩИЙ ШАГ:"
+echo "  Откройте $SITE_URL/admin и настройте:"
+echo "  - Telegram уведомления"
+echo "  - Cloudinary для загрузки изображений"
+echo "  - Платёжные системы (Click, Payme, Uzum)"
+echo "  - Яндекс.Карты для доставки"
+echo ""
 echo "📝 Для обновления приложения используйте: ./update_vps.sh"
-echo ""
-
-# Создание архива telegram_bot для скачивания
-print_step "Создание архива Telegram бота для Windows..."
-cd $APP_DIR
-
-# Автоматическая замена localhost на VPS IP в .env для Windows
-VPS_IP=$(hostname -I | awk '{print $1}')
-print_step "Настройка DATABASE_URL для Windows (замена localhost на $VPS_IP)..."
-sed -i "s/@localhost:/@$VPS_IP:/g" $APP_DIR/telegram_bot/.env
-
-apt install -y zip > /dev/null 2>&1
-ZIP_FILE="telegram_bot_$(date +%Y%m%d_%H%M%S).zip"
-zip -r $ZIP_FILE telegram_bot/ -x "telegram_bot/__pycache__/*" > /dev/null 2>&1
-chown $APP_USER:$APP_USER $ZIP_FILE
-
-print_step "✅ DATABASE_URL автоматически настроен для Windows"
-
-echo ""
-echo "=================================================="
-echo -e "${GREEN}🤖 TELEGRAM БОТ - ГОТОВ К СБОРКЕ${NC}"
-echo "=================================================="
-echo ""
-echo "Архив Telegram бота создан: $ZIP_FILE"
-echo ""
-echo "📥 Команда для скачивания на ваш Windows компьютер:"
-echo ""
-echo -e "${YELLOW}scp root@$(hostname -I | awk '{print $1}'):$APP_DIR/$ZIP_FILE .${NC}"
-echo ""
-echo "✅ DATABASE_URL уже настроен автоматически (использует IP: $VPS_IP)"
-echo ""
-echo "После скачивания:"
-echo "  1. Распакуйте архив"
-echo "  2. Запустите build_exe.bat в папке telegram_bot"
-echo "  3. Получите готовый .exe файл в папке dist/"
-echo ""
-echo "💡 Файл .env уже содержит правильный IP вашего VPS - никаких изменений не требуется!"
 echo ""
 echo "=================================================="
 echo ""
