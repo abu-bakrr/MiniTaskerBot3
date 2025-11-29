@@ -53,6 +53,13 @@ def get_db_connection():
     # Use DATABASE_URL if available, otherwise build from individual vars
     database_url = os.getenv('DATABASE_URL')
     
+    # Debug: print connection info on first call
+    if not hasattr(get_db_connection, '_debug_printed'):
+        get_db_connection._debug_printed = True
+        print(f"Database connection mode: {'DATABASE_URL' if database_url else 'Individual vars'}")
+        if not database_url:
+            print(f"PGHOST: {os.getenv('PGHOST', 'NOT SET')}")
+    
     if database_url:
         # Check if this is a remote Neon database (contains neon.tech)
         # Local PostgreSQL on VPS doesn't need sslmode
