@@ -74,6 +74,8 @@ export default function CheckoutModal({
       setSelectedPayment(null);
       setReceiptUrl(null);
       setOrderSuccess(false);
+      setMapError(null);
+      setMapLoaded(false);
       setDeliveryInfo({
         address: '',
         lat: null,
@@ -86,32 +88,59 @@ export default function CheckoutModal({
 
     const yandexApiKey = config?.yandexMaps?.apiKey;
     if (!yandexApiKey) {
-      setMapError('API ключ Yandex Maps не настроен');
+      setMapError('Карта недоступна. Введите адрес вручную.');
       return;
     }
 
     if (window.ymaps) {
-      initMap();
+      try {
+        window.ymaps.ready(() => {
+          initMap();
+        });
+      } catch (error) {
+        console.error('Yandex Maps ready error:', error);
+        setMapError('Карта недоступна. Введите адрес вручную.');
+      }
       return;
     }
 
     const script = document.createElement('script');
     script.src = `https://api-maps.yandex.ru/2.1/?apikey=${yandexApiKey}&lang=ru_RU`;
     script.async = true;
+    
+    let isTimedOut = false;
+    const loadTimeout = setTimeout(() => {
+      isTimedOut = true;
+      setMapError('Превышено время загрузки карты. Введите адрес вручную.');
+    }, 10000);
+    
     script.onload = () => {
-      window.ymaps.ready(() => {
-        setMapLoaded(true);
-        initMap();
-      });
+      clearTimeout(loadTimeout);
+      try {
+        window.ymaps.ready(() => {
+          if (!isTimedOut) {
+            setMapError(null);
+          }
+          setMapLoaded(true);
+          initMap();
+        });
+      } catch (error) {
+        console.error('Yandex Maps ready error:', error);
+        setMapError('Карта недоступна. Введите адрес вручную.');
+      }
     };
     script.onerror = () => {
-      setMapError('Ошибка загрузки Yandex Maps');
+      clearTimeout(loadTimeout);
+      setMapError('Не удалось загрузить карту. Введите адрес вручную.');
     };
     document.head.appendChild(script);
 
     return () => {
+      clearTimeout(loadTimeout);
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.destroy();
+        try {
+          mapInstanceRef.current.destroy();
+        } catch (e) {}
         mapInstanceRef.current = null;
       }
     };
@@ -125,7 +154,9 @@ export default function CheckoutModal({
 
     try {
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.destroy();
+        try {
+          mapInstanceRef.current.destroy();
+        } catch (e) {}
       }
 
       mapInstanceRef.current = new window.ymaps.Map(mapContainerRef.current, {
@@ -153,10 +184,11 @@ export default function CheckoutModal({
         await geocodeCoords(coords);
       });
 
+      setMapError(null);
       setMapLoaded(true);
     } catch (error) {
       console.error('Map initialization error:', error);
-      setMapError('Ошибка инициализации карты');
+      setMapError('Ошибка инициализации карты. Введите адрес вручную.');
     }
   };
 
@@ -373,10 +405,12 @@ export default function CheckoutModal({
                   </div>
                   
                   {mapError ? (
-                    <div className="h-[300px] flex flex-col items-center justify-center bg-muted/50 text-muted-foreground">
-                      <MapPin className="w-12 h-12 mb-3 opacity-30" />
-                      <p className="text-sm font-medium">{mapError}</p>
-                      <p className="text-xs mt-1">Проверьте настройки API ключа</p>
+                    <div className="h-[200px] flex flex-col items-center justify-center bg-muted/50 text-muted-foreground px-4">
+                      <MapPin className="w-10 h-10 mb-3 opacity-40" />
+                      <p className="text-sm font-medium text-center">{mapError}</p>
+                      <p className="text-xs mt-2 text-center opacity-70">
+                        Вы можете указать адрес в поле выше
+                      </p>
                     </div>
                   ) : !mapLoaded ? (
                     <div className="h-[300px] flex flex-col items-center justify-center bg-muted/30">
