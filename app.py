@@ -1357,13 +1357,14 @@ def checkout_order():
         order_id = order['id']
         
         # Insert order items from database cart data
+        import json as json_lib
         for item in cart_items:
             cur.execute(
                 '''INSERT INTO order_items (order_id, product_id, name, price, quantity, selected_color, selected_attributes) 
                    VALUES (%s, %s, %s, %s, %s, %s, %s)''',
                 (order_id, item['product_id'], item['name'], item['price'], 
                  item['quantity'], item.get('selected_color'),
-                 item.get('selected_attributes'))
+                 json_lib.dumps(item.get('selected_attributes')) if item.get('selected_attributes') else None)
             )
         
         conn.commit()
