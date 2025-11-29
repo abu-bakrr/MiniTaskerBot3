@@ -127,7 +127,7 @@ export default function SearchWithSuggestions({
       </div>
 
       {shouldShowDropdown && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-background border border-border rounded-xl shadow-lg overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-background border border-border rounded-xl shadow-lg overflow-hidden z-[60] animate-in fade-in slide-in-from-top-2 duration-200">
           {isLoading ? (
             <div className="p-6 text-center">
               <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto" />

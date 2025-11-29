@@ -164,7 +164,7 @@ export default function Cart({
               ))}
             </div>
 
-            <div className="sticky bottom-0 bg-background border-t border-border pt-4 pb-6">
+            <div className="sticky bottom-0 z-40 bg-background border-t border-border pt-4 pb-6">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-lg font-semibold">Итого:</span>
                 <span className="text-2xl font-bold text-primary" data-testid="text-cart-total">

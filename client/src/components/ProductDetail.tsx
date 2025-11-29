@@ -115,7 +115,7 @@ export default function ProductDetail({
     <div className="min-h-screen bg-background pb-6" data-testid="product-detail">
       <div className="max-w-[420px] mx-auto">
         {/* Back Button Header */}
-        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b px-4 py-3 flex items-center gap-3">
+        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b px-4 py-3 flex items-center gap-3">
           <Button
             size="icon"
             variant="ghost"
