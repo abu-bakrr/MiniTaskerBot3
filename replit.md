@@ -86,7 +86,18 @@ Deployment supports fully automated (`auto_deploy.sh`) and interactive (`deploy_
 
 ## Payment Integration
 
-The system supports three Uzbekistan payment gateways:
+The system supports multiple payment methods with conditional display (methods are hidden if not configured):
+
+### Card Transfer (Manual Bank Transfer)
+- **Configuration:** `config/settings.json` under `paymentMethods.cardTransfer`
+  - `enabled` - Boolean to enable/disable
+  - `cardNumber` - Bank card number for transfer
+  - `cardHolder` - Cardholder name
+  - `bankName` - Bank name (e.g., "Uzcard", "Humo")
+- **Features:**
+  - Receipt upload via Cloudinary (customer uploads payment confirmation screenshot)
+  - Receipt stored in `payment_receipt_url` field in orders table
+  - Admin can view and enlarge receipt image in order details
 
 ### Click
 - **Webhook URLs:** `/api/webhooks/click/prepare`, `/api/webhooks/click/complete`
@@ -94,18 +105,21 @@ The system supports three Uzbekistan payment gateways:
   - `CLICK_MERCHANT_ID` - Merchant ID from Click cabinet
   - `CLICK_SERVICE_ID` - Service ID from Click cabinet
   - `CLICK_SECRET_KEY` - Secret key for signature verification
+- **Configuration:** Requires `merchantId` in `config/settings.json` to be visible
 
 ### Payme
 - **Webhook URL:** `/api/webhooks/payme` (JSON-RPC API)
 - **Required Environment Variables:**
   - `PAYME_MERCHANT_ID` - Merchant ID from Payme cabinet
   - `PAYME_KEY` - Secret key for Basic Auth verification
+- **Configuration:** Requires `merchantId` in `config/settings.json` to be visible
 
 ### Uzum Bank
 - **Webhook URLs:** `/api/webhooks/uzum/check`, `/api/webhooks/uzum/create`, `/api/webhooks/uzum/confirm`, `/api/webhooks/uzum/reverse`
 - **Required Environment Variables:**
   - `UZUM_MERCHANT_ID` - Merchant ID from Uzum cabinet
   - `UZUM_SECRET_KEY` - Secret key for HMAC signature verification
+- **Configuration:** Requires `merchantId` and `serviceId` in `config/settings.json` to be visible
 
 ### Yandex Maps
 For address selection during checkout:
@@ -117,6 +131,33 @@ For address selection during checkout:
 - Merchant IDs (public) can be stored in `config/settings.json`
 - All webhooks verify signatures/authentication before processing
 - Order totals are calculated server-side from database prices (never trusting client data)
+
+## Telegram Notifications
+
+The system sends order notifications to the admin via Telegram bot.
+
+### Configuration
+- **`config/settings.json`** under `telegramNotifications`:
+  - `enabled` - Boolean to enable/disable notifications
+  - `adminChatId` - Telegram chat ID to receive notifications (can also use TELEGRAM_ADMIN_CHAT_ID env var)
+- **Environment Variables (required):**
+  - `TELEGRAM_BOT_TOKEN` - Bot token from @BotFather (stored as secret, NEVER in config files)
+
+### Notification Content
+Each new order triggers a message containing:
+- Order ID and creation timestamp
+- Customer name and phone number
+- Delivery address
+- Complete list of ordered products with quantities and prices
+- Order total and payment method
+- Receipt photo attached (if card transfer payment)
+
+### Setup
+1. Create a bot via [@BotFather](https://t.me/BotFather) on Telegram
+2. Get the bot token and set `TELEGRAM_BOT_TOKEN` environment variable
+3. Get your chat ID (start the bot and use [@userinfobot](https://t.me/userinfobot) or similar)
+4. Set `adminChatId` in `config/settings.json`
+5. Set `enabled: true` in `telegramNotifications` config
 
 ## External Dependencies
 

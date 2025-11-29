@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, Package, User, MapPin, Phone, Calendar, CreditCard } from 'lucide-react';
+import { Eye, Package, User, MapPin, Phone, Calendar, CreditCard, Receipt, X, ExternalLink } from 'lucide-react';
 
 interface OrderItem {
   id: string;
@@ -27,6 +27,7 @@ interface Order {
   status: string;
   payment_method: string;
   payment_status: string;
+  payment_receipt_url?: string;
   delivery_address: string;
   customer_phone: string;
   customer_name: string;
@@ -53,7 +54,24 @@ export default function AdminOrders() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [customStatus, setCustomStatus] = useState('');
   const [orderStatuses, setOrderStatuses] = useState(DEFAULT_STATUSES);
+  const [receiptModalOpen, setReceiptModalOpen] = useState(false);
+  const [receiptImageUrl, setReceiptImageUrl] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const openReceiptModal = (url: string) => {
+    setReceiptImageUrl(url);
+    setReceiptModalOpen(true);
+  };
+
+  const getPaymentMethodLabel = (method: string) => {
+    const labels: Record<string, string> = {
+      'click': 'Click',
+      'payme': 'Payme',
+      'uzum': 'Uzum Bank',
+      'card_transfer': 'Перевод на карту',
+    };
+    return labels[method] || method;
+  };
 
   useEffect(() => {
     fetchOrders();
@@ -299,11 +317,53 @@ export default function AdminOrders() {
                   {selectedOrder.payment_method && (
                     <div className="flex items-center gap-2">
                       <CreditCard className="h-4 w-4" />
-                      {selectedOrder.payment_method}
+                      {getPaymentMethodLabel(selectedOrder.payment_method)}
                     </div>
                   )}
                 </div>
               </div>
+
+              {selectedOrder.payment_receipt_url && (
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground flex items-center gap-2">
+                    <Receipt className="h-4 w-4" />
+                    Чек оплаты (перевод на карту)
+                  </Label>
+                  <div className="bg-muted p-4 rounded-lg">
+                    <div className="relative group cursor-pointer" onClick={() => openReceiptModal(selectedOrder.payment_receipt_url!)}>
+                      <img 
+                        src={selectedOrder.payment_receipt_url} 
+                        alt="Чек оплаты"
+                        className="w-full max-h-64 object-contain rounded-lg border"
+                      />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                        <div className="text-white flex items-center gap-2">
+                          <ExternalLink className="h-5 w-5" />
+                          <span>Увеличить</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-2 flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openReceiptModal(selectedOrder.payment_receipt_url!)}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        Просмотр
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => window.open(selectedOrder.payment_receipt_url, '_blank')}
+                      >
+                        <ExternalLink className="h-4 w-4 mr-1" />
+                        Открыть
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label className="text-muted-foreground">Товары</Label>
@@ -344,6 +404,28 @@ export default function AdminOrders() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={receiptModalOpen} onOpenChange={setReceiptModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[95vh] p-2">
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 z-10 bg-background/80"
+              onClick={() => setReceiptModalOpen(false)}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+            {receiptImageUrl && (
+              <img 
+                src={receiptImageUrl} 
+                alt="Чек оплаты"
+                className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -61,7 +61,7 @@ export default function Cart({
     setIsModalOpen(true);
   };
 
-  const handlePaymentSelect = async (paymentMethod: string, deliveryInfo: DeliveryInfo): Promise<string | null> => {
+  const handlePaymentSelect = async (paymentMethod: string, deliveryInfo: DeliveryInfo, receiptUrl?: string): Promise<string | null> => {
     if (!user?.id) {
       console.error('User ID not available');
       toast({
@@ -85,6 +85,7 @@ export default function Cart({
           delivery_lng: deliveryInfo.lng,
           customer_name: deliveryInfo.customerName,
           customer_phone: deliveryInfo.customerPhone,
+          payment_receipt_url: receiptUrl,
         }),
       });
 
@@ -92,12 +93,14 @@ export default function Cart({
         onClearCart();
         return response.payment_url;
       } else if (response.order_id) {
-        toast({
-          title: "Заказ создан",
-          description: `Номер заказа: ${response.order_id}`,
-        });
         onClearCart();
-        setIsModalOpen(false);
+        if (paymentMethod !== 'card_transfer') {
+          toast({
+            title: "Заказ создан",
+            description: `Номер заказа: ${response.order_id}`,
+          });
+          setIsModalOpen(false);
+        }
         return null;
       }
 

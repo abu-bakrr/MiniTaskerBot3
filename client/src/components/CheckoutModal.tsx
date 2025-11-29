@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useConfig } from "@/hooks/useConfig";
-import { X, MapPin, CreditCard, Loader2 } from "lucide-react";
+import { X, MapPin, CreditCard, Loader2, Upload, CheckCircle, Copy, Image } from "lucide-react";
 
 interface OrderItem {
   id: string;
@@ -27,7 +27,7 @@ interface CheckoutModalProps {
   items: OrderItem[];
   total: number;
   onClose: () => void;
-  onPaymentSelect: (paymentMethod: string, deliveryInfo: DeliveryInfo) => Promise<string | null>;
+  onPaymentSelect: (paymentMethod: string, deliveryInfo: DeliveryInfo, receiptUrl?: string) => Promise<string | null>;
 }
 
 declare global {
@@ -44,9 +44,15 @@ export default function CheckoutModal({
   onPaymentSelect,
 }: CheckoutModalProps) {
   const { config, formatPrice } = useConfig();
-  const [step, setStep] = useState<'delivery' | 'payment'>('delivery');
+  const [step, setStep] = useState<'delivery' | 'payment' | 'card_transfer'>('delivery');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(false);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo>({
     address: '',
@@ -66,6 +72,8 @@ export default function CheckoutModal({
     if (!isOpen) {
       setStep('delivery');
       setSelectedPayment(null);
+      setReceiptUrl(null);
+      setOrderSuccess(false);
       setDeliveryInfo({
         address: '',
         lat: null,
@@ -203,6 +211,11 @@ export default function CheckoutModal({
   };
 
   const handlePayment = async (method: string) => {
+    if (method === 'card_transfer') {
+      setStep('card_transfer');
+      return;
+    }
+    
     setIsLoading(true);
     setSelectedPayment(method);
     
@@ -219,16 +232,90 @@ export default function CheckoutModal({
     }
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingReceipt(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', 'ml_default');
+
+      const cloudinaryConfig = config?.cloudinary;
+      const cloudName = cloudinaryConfig?.cloudName || 'demo';
+
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const data = await response.json();
+      setReceiptUrl(data.secure_url);
+    } catch (error) {
+      console.error('Error uploading receipt:', error);
+      alert('Ошибка загрузки чека. Попробуйте еще раз.');
+    } finally {
+      setIsUploadingReceipt(false);
+    }
+  };
+
+  const handleCardTransferSubmit = async () => {
+    if (!receiptUrl) {
+      alert('Пожалуйста, загрузите фото чека оплаты');
+      return;
+    }
+
+    setIsLoading(true);
+    setSelectedPayment('card_transfer');
+
+    try {
+      await onPaymentSelect('card_transfer', deliveryInfo, receiptUrl);
+      setOrderSuccess(true);
+    } catch (error) {
+      console.error('Order error:', error);
+      alert('Ошибка при создании заказа');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const copyToClipboard = (text: string, field: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
   if (!isOpen) return null;
 
   const isDeliveryValid = deliveryInfo.address && deliveryInfo.customerName && deliveryInfo.customerPhone;
+
+  const clickConfig = config?.payment?.click;
+  const paymeConfig = config?.payment?.payme;
+  const uzumConfig = config?.payment?.uzum;
+  const cardTransferConfig = config?.payment?.cardTransfer;
+
+  const isClickAvailable = clickConfig?.enabled !== false && clickConfig?.merchantId && clickConfig?.serviceId;
+  const isPaymeAvailable = paymeConfig?.enabled !== false && paymeConfig?.merchantId;
+  const isUzumAvailable = uzumConfig?.enabled !== false && uzumConfig?.merchantId;
+  const isCardTransferAvailable = cardTransferConfig?.enabled !== false && cardTransferConfig?.cardNumber;
+
+  const hasAnyPaymentMethod = isClickAvailable || isPaymeAvailable || isUzumAvailable || isCardTransferAvailable;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-background rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-xl">
         <div className="sticky top-0 bg-background border-b border-border p-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">
-            {step === 'delivery' ? 'Адрес доставки' : 'Способ оплаты'}
+            {step === 'delivery' ? 'Адрес доставки' : step === 'payment' ? 'Способ оплаты' : 'Оплата переводом'}
           </h2>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="w-5 h-5" />
@@ -313,7 +400,7 @@ export default function CheckoutModal({
                 Перейти к оплате
               </Button>
             </div>
-          ) : (
+          ) : step === 'payment' ? (
             <div className="space-y-4">
               <div className="bg-muted rounded-lg p-3 mb-4">
                 <div className="flex justify-between items-center mb-2">
@@ -335,72 +422,97 @@ export default function CheckoutModal({
                 ))}
               </div>
 
-              <div className="space-y-3">
-                <div className="text-sm font-medium">Выберите способ оплаты:</div>
+              {!hasAnyPaymentMethod ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <CreditCard className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>Способы оплаты не настроены</p>
+                  <p className="text-sm">Свяжитесь с администратором</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="text-sm font-medium">Выберите способ оплаты:</div>
 
-                {config?.payment?.click?.enabled !== false && (
-                  <Button
-                    variant="outline"
-                    className="w-full h-14 justify-start gap-3 hover:border-primary"
-                    onClick={() => handlePayment('click')}
-                    disabled={isLoading}
-                  >
-                    {isLoading && selectedPayment === 'click' ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <div className="w-10 h-10 rounded-lg bg-[#00AEEF] flex items-center justify-center">
-                        <span className="text-white font-bold text-xs">CLICK</span>
+                  {isClickAvailable && (
+                    <Button
+                      variant="outline"
+                      className="w-full h-14 justify-start gap-3 hover:border-primary"
+                      onClick={() => handlePayment('click')}
+                      disabled={isLoading}
+                    >
+                      {isLoading && selectedPayment === 'click' ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg bg-[#00AEEF] flex items-center justify-center">
+                          <span className="text-white font-bold text-xs">CLICK</span>
+                        </div>
+                      )}
+                      <div className="text-left">
+                        <div className="font-medium">Click</div>
+                        <div className="text-xs text-muted-foreground">Оплата через Click</div>
                       </div>
-                    )}
-                    <div className="text-left">
-                      <div className="font-medium">Click</div>
-                      <div className="text-xs text-muted-foreground">Оплата через Click</div>
-                    </div>
-                  </Button>
-                )}
+                    </Button>
+                  )}
 
-                {config?.payment?.payme?.enabled !== false && (
-                  <Button
-                    variant="outline"
-                    className="w-full h-14 justify-start gap-3 hover:border-primary"
-                    onClick={() => handlePayment('payme')}
-                    disabled={isLoading}
-                  >
-                    {isLoading && selectedPayment === 'payme' ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <div className="w-10 h-10 rounded-lg bg-[#00CDBE] flex items-center justify-center">
-                        <span className="text-white font-bold text-xs">Payme</span>
+                  {isPaymeAvailable && (
+                    <Button
+                      variant="outline"
+                      className="w-full h-14 justify-start gap-3 hover:border-primary"
+                      onClick={() => handlePayment('payme')}
+                      disabled={isLoading}
+                    >
+                      {isLoading && selectedPayment === 'payme' ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg bg-[#00CDBE] flex items-center justify-center">
+                          <span className="text-white font-bold text-xs">Payme</span>
+                        </div>
+                      )}
+                      <div className="text-left">
+                        <div className="font-medium">Payme</div>
+                        <div className="text-xs text-muted-foreground">Оплата через Payme</div>
                       </div>
-                    )}
-                    <div className="text-left">
-                      <div className="font-medium">Payme</div>
-                      <div className="text-xs text-muted-foreground">Оплата через Payme</div>
-                    </div>
-                  </Button>
-                )}
+                    </Button>
+                  )}
 
-                {config?.payment?.uzum?.enabled !== false && (
-                  <Button
-                    variant="outline"
-                    className="w-full h-14 justify-start gap-3 hover:border-primary"
-                    onClick={() => handlePayment('uzum')}
-                    disabled={isLoading}
-                  >
-                    {isLoading && selectedPayment === 'uzum' ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <div className="w-10 h-10 rounded-lg bg-[#7B68EE] flex items-center justify-center">
-                        <span className="text-white font-bold text-xs">Uzum</span>
+                  {isUzumAvailable && (
+                    <Button
+                      variant="outline"
+                      className="w-full h-14 justify-start gap-3 hover:border-primary"
+                      onClick={() => handlePayment('uzum')}
+                      disabled={isLoading}
+                    >
+                      {isLoading && selectedPayment === 'uzum' ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg bg-[#7B68EE] flex items-center justify-center">
+                          <span className="text-white font-bold text-xs">Uzum</span>
+                        </div>
+                      )}
+                      <div className="text-left">
+                        <div className="font-medium">Uzum Bank</div>
+                        <div className="text-xs text-muted-foreground">Оплата через Uzum</div>
                       </div>
-                    )}
-                    <div className="text-left">
-                      <div className="font-medium">Uzum Bank</div>
-                      <div className="text-xs text-muted-foreground">Оплата через Uzum</div>
-                    </div>
-                  </Button>
-                )}
-              </div>
+                    </Button>
+                  )}
+
+                  {isCardTransferAvailable && (
+                    <Button
+                      variant="outline"
+                      className="w-full h-14 justify-start gap-3 hover:border-primary"
+                      onClick={() => handlePayment('card_transfer')}
+                      disabled={isLoading}
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+                        <CreditCard className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-medium">Перевод на карту</div>
+                        <div className="text-xs text-muted-foreground">Оплата переводом</div>
+                      </div>
+                    </Button>
+                  )}
+                </div>
+              )}
 
               <Button
                 variant="ghost"
@@ -409,6 +521,158 @@ export default function CheckoutModal({
               >
                 ← Вернуться к адресу
               </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {orderSuccess ? (
+                <div className="text-center py-8">
+                  <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold mb-2">Заказ оформлен!</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Ваш заказ принят. После проверки оплаты мы свяжемся с вами.
+                  </p>
+                  <Button onClick={onClose} className="w-full">
+                    Закрыть
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="bg-muted rounded-lg p-4">
+                    <div className="text-center mb-3">
+                      <div className="text-sm text-muted-foreground">К оплате:</div>
+                      <div className="text-2xl font-bold text-primary">{formatPrice(total)}</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
+                    <h3 className="font-semibold mb-3 flex items-center gap-2">
+                      <CreditCard className="w-5 h-5 text-green-600" />
+                      Реквизиты для перевода
+                    </h3>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between bg-white dark:bg-background rounded-lg p-3">
+                        <div>
+                          <div className="text-xs text-muted-foreground">Номер карты</div>
+                          <div className="font-mono font-bold text-lg">
+                            {cardTransferConfig?.cardNumber?.replace(/(\d{4})/g, '$1 ').trim()}
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => copyToClipboard(cardTransferConfig?.cardNumber || '', 'card')}
+                        >
+                          {copiedField === 'card' ? (
+                            <CheckCircle className="w-4 h-4 text-green-500" />
+                          ) : (
+                            <Copy className="w-4 h-4" />
+                          )}
+                        </Button>
+                      </div>
+
+                      {cardTransferConfig?.cardHolder && (
+                        <div className="bg-white dark:bg-background rounded-lg p-3">
+                          <div className="text-xs text-muted-foreground">Получатель</div>
+                          <div className="font-medium">{cardTransferConfig.cardHolder}</div>
+                        </div>
+                      )}
+
+                      {cardTransferConfig?.bankName && (
+                        <div className="bg-white dark:bg-background rounded-lg p-3">
+                          <div className="text-xs text-muted-foreground">Банк</div>
+                          <div className="font-medium">{cardTransferConfig.bankName}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label className="flex items-center gap-2">
+                      <Image className="w-4 h-4" />
+                      Загрузите фото чека оплаты *
+                    </Label>
+                    
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+
+                    {receiptUrl ? (
+                      <div className="relative">
+                        <img
+                          src={receiptUrl}
+                          alt="Чек оплаты"
+                          className="w-full h-48 object-cover rounded-lg border"
+                        />
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="absolute top-2 right-2"
+                          onClick={() => {
+                            setReceiptUrl(null);
+                            if (fileInputRef.current) {
+                              fileInputRef.current.value = '';
+                            }
+                          }}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                        <div className="absolute bottom-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+                          <CheckCircle className="w-3 h-3" />
+                          Загружено
+                        </div>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        className="w-full h-32 border-dashed flex flex-col gap-2"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploadingReceipt}
+                      >
+                        {isUploadingReceipt ? (
+                          <>
+                            <Loader2 className="w-8 h-8 animate-spin" />
+                            <span>Загрузка...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-8 h-8" />
+                            <span>Нажмите чтобы загрузить фото чека</span>
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
+
+                  <Button
+                    onClick={handleCardTransferSubmit}
+                    className="w-full"
+                    disabled={!receiptUrl || isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Оформление...
+                      </>
+                    ) : (
+                      'Подтвердить оплату'
+                    )}
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    onClick={() => setStep('payment')}
+                    className="w-full"
+                    disabled={isLoading}
+                  >
+                    ← Выбрать другой способ оплаты
+                  </Button>
+                </>
+              )}
             </div>
           )}
         </div>

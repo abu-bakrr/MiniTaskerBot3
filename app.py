@@ -5,6 +5,7 @@ import os
 import json
 import base64
 import hashlib
+import requests
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 import cloudinary
@@ -258,6 +259,10 @@ def init_db():
                           WHERE table_name='orders' AND column_name='customer_name') THEN
                 ALTER TABLE orders ADD COLUMN customer_name TEXT;
             END IF;
+            IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                          WHERE table_name='orders' AND column_name='payment_receipt_url') THEN
+                ALTER TABLE orders ADD COLUMN payment_receipt_url TEXT;
+            END IF;
         END $$;
     ''')
     
@@ -343,6 +348,84 @@ def get_cloudinary_config():
         'api_key': api_key,
         'api_secret': api_secret
     }
+
+# Telegram notification function
+def send_telegram_notification(order_data, order_items):
+    """Send order notification to Telegram admin"""
+    try:
+        config_path = os.path.join(os.path.dirname(__file__), 'config', 'settings.json')
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+        
+        telegram_config = config.get('telegramNotifications', {})
+        
+        if not telegram_config.get('enabled'):
+            return False
+        
+        bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
+        admin_chat_id = telegram_config.get('adminChatId') or os.getenv('TELEGRAM_ADMIN_CHAT_ID')
+        
+        if not bot_token or not admin_chat_id:
+            print("Telegram notification: bot_token or admin_chat_id not configured")
+            return False
+        
+        # Format order items
+        items_text = ""
+        for item in order_items:
+            items_text += f"  - {item['name']} x{item['quantity']} = {item['price'] * item['quantity']:,} сум\n"
+            if item.get('selected_color'):
+                items_text += f"    Цвет: {item['selected_color']}\n"
+        
+        # Payment method labels
+        payment_labels = {
+            'click': 'Click',
+            'payme': 'Payme',
+            'uzum': 'Uzum Bank',
+            'card_transfer': 'Перевод на карту'
+        }
+        payment_method = payment_labels.get(order_data.get('payment_method'), order_data.get('payment_method', 'Не указан'))
+        
+        # Build message
+        message = f"""🛒 <b>Новый заказ!</b>
+
+📋 <b>Заказ #{order_data['id'][:8]}</b>
+
+👤 <b>Клиент:</b> {order_data.get('customer_name', 'Не указано')}
+📞 <b>Телефон:</b> {order_data.get('customer_phone', 'Не указан')}
+📍 <b>Адрес:</b> {order_data.get('delivery_address', 'Не указан')}
+
+💳 <b>Способ оплаты:</b> {payment_method}
+
+📦 <b>Товары:</b>
+{items_text}
+💰 <b>Итого:</b> {order_data['total']:,} сум
+"""
+        
+        # Add receipt photo info if exists
+        if order_data.get('payment_receipt_url'):
+            message += f"\n📸 <b>Чек оплаты:</b> <a href=\"{order_data['payment_receipt_url']}\">Посмотреть</a>"
+        
+        # Send message to Telegram
+        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+        payload = {
+            'chat_id': admin_chat_id,
+            'text': message,
+            'parse_mode': 'HTML',
+            'disable_web_page_preview': False
+        }
+        
+        response = requests.post(url, json=payload, timeout=10)
+        
+        if response.status_code == 200:
+            print(f"✅ Telegram notification sent for order {order_data['id'][:8]}")
+            return True
+        else:
+            print(f"❌ Telegram notification failed: {response.text}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ Error sending Telegram notification: {str(e)}")
+        return False
 
 # API Routes
 
@@ -849,6 +932,7 @@ def checkout_order():
         delivery_lng = data.get('delivery_lng')
         customer_name = data.get('customer_name')
         customer_phone = data.get('customer_phone')
+        payment_receipt_url = data.get('payment_receipt_url')  # For card transfer payments
         
         # SECURITY: Get user_id from session, not from client
         user_id = session.get('user_id')
@@ -897,13 +981,19 @@ def checkout_order():
         
         print(f"Total (calculated from DB): {total}")
         
+        # Determine initial status for card_transfer (awaiting receipt verification)
+        initial_status = 'pending'
+        initial_payment_status = 'pending'
+        if payment_method == 'card_transfer' and payment_receipt_url:
+            initial_payment_status = 'awaiting_verification'
+        
         # Create order in database with delivery info
         cur.execute(
             '''INSERT INTO orders (user_id, total, status, payment_method, payment_status, 
-               delivery_address, delivery_lat, delivery_lng, customer_phone, customer_name) 
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING *''',
-            (user_id, total, 'pending', payment_method, 'pending',
-             delivery_address, delivery_lat, delivery_lng, customer_phone, customer_name)
+               delivery_address, delivery_lat, delivery_lng, customer_phone, customer_name, payment_receipt_url) 
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING *''',
+            (user_id, total, initial_status, payment_method, initial_payment_status,
+             delivery_address, delivery_lat, delivery_lng, customer_phone, customer_name, payment_receipt_url)
         )
         order = cur.fetchone()
         order_id = order['id']
@@ -961,6 +1051,12 @@ def checkout_order():
                 # For now, store order and redirect to Uzum payment page
                 payment_url = f"https://payment.apelsin.uz/merchant?merchantId={merchant_id}&amount={total}&orderId={order_id}"
         
+        elif payment_method == 'card_transfer':
+            # Card transfer - no redirect needed, order is created with receipt
+            # Clear the cart for successful card transfer order
+            cur.execute('DELETE FROM cart WHERE user_id = %s', (user_id,))
+            conn.commit()
+        
         # Update order with payment info
         if payment_url:
             cur.execute(
@@ -975,6 +1071,27 @@ def checkout_order():
         print(f"✅ Order created: {order_id}")
         print(f"💳 Payment URL: {payment_url}")
         print(f"{'='*50}\n")
+        
+        # Send Telegram notification for new order
+        order_data = {
+            'id': order_id,
+            'total': total,
+            'customer_name': customer_name,
+            'customer_phone': customer_phone,
+            'delivery_address': delivery_address,
+            'payment_method': payment_method,
+            'payment_receipt_url': payment_receipt_url
+        }
+        order_items_for_notification = [
+            {
+                'name': item['name'],
+                'price': item['price'],
+                'quantity': item['quantity'],
+                'selected_color': item.get('selected_color')
+            }
+            for item in cart_items
+        ]
+        send_telegram_notification(order_data, order_items_for_notification)
         
         return jsonify({
             'order_id': order_id,
