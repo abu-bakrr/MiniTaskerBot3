@@ -26,7 +26,7 @@ interface HomeProps {
   onProductClick: (id: string) => void;
   cartCount: number;
   favoritesCount: number;
-  onAddToCart: (id: string) => void;
+  onAddToCart: (id: string, selectedColor?: string, selectedAttributes?: Record<string, string>) => void;
   onToggleFavorite: (id: string) => void;
   favoriteIds: string[];
   cartItemIds: string[];

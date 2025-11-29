@@ -1,4 +1,6 @@
+import { useState } from "react";
 import ProductCard from "./ProductCard";
+import QuickAddModal from "./QuickAddModal";
 
 interface Product {
   id: string;
@@ -11,7 +13,7 @@ interface Product {
 interface ProductGridProps {
   products: Product[];
   onToggleFavorite?: (id: string) => void;
-  onAddToCart?: (id: string) => void;
+  onAddToCart?: (id: string, selectedColor?: string, selectedAttributes?: Record<string, string>) => void;
   onProductClick?: (id: string) => void;
   favoriteIds?: string[];
   cartItemIds?: string[];
@@ -27,6 +29,20 @@ export default function ProductGrid({
   cartItemIds = [],
   onCartClick,
 }: ProductGridProps) {
+  const [quickAddProductId, setQuickAddProductId] = useState<string | null>(null);
+
+  const handleAddToCart = (productId: string) => {
+    if (cartItemIds.includes(productId)) {
+      onCartClick?.();
+    } else {
+      setQuickAddProductId(productId);
+    }
+  };
+
+  const handleQuickAddToCart = (productId: string, selectedColor?: string, selectedAttributes?: Record<string, string>) => {
+    onAddToCart?.(productId, selectedColor, selectedAttributes);
+  };
+
   if (products.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center" data-testid="empty-products">
@@ -39,19 +55,30 @@ export default function ProductGrid({
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 p-4 md:p-6 max-w-7xl mx-auto" data-testid="grid-products">
-      {products.map((product) => (
-        <ProductCard
-          key={product.id}
-          {...product}
-          isFavorite={favoriteIds.includes(product.id)}
-          isInCart={cartItemIds.includes(product.id)}
-          onToggleFavorite={onToggleFavorite}
-          onAddToCart={onAddToCart}
-          onClick={onProductClick}
-          onCartClick={onCartClick}
-        />
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 p-4 md:p-6 max-w-7xl mx-auto" data-testid="grid-products">
+        {products.map((product) => (
+          <ProductCard
+            key={product.id}
+            {...product}
+            isFavorite={favoriteIds.includes(product.id)}
+            isInCart={cartItemIds.includes(product.id)}
+            onToggleFavorite={onToggleFavorite}
+            onAddToCart={handleAddToCart}
+            onClick={onProductClick}
+            onCartClick={onCartClick}
+          />
+        ))}
+      </div>
+
+      <QuickAddModal
+        isOpen={quickAddProductId !== null}
+        productId={quickAddProductId}
+        onClose={() => setQuickAddProductId(null)}
+        onAddToCart={handleQuickAddToCart}
+        isInCart={quickAddProductId ? cartItemIds.includes(quickAddProductId) : false}
+        onCartClick={onCartClick}
+      />
+    </>
   );
 }

@@ -182,21 +182,21 @@ export default function AdminManagers() {
       )}
 
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
+        <CardHeader className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Управление администраторами
+                <Shield className="h-5 w-5 flex-shrink-0" />
+                <span className="break-words">Управление администраторами</span>
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="mt-1">
                 Добавляйте и удаляйте администраторов вашего магазина
               </CardDescription>
             </div>
 
             <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
               <DialogTrigger asChild>
-                <Button>
+                <Button className="w-full sm:w-auto flex-shrink-0">
                   <UserPlus className="h-4 w-4 mr-2" />
                   Добавить админа
                 </Button>
@@ -275,21 +275,21 @@ export default function AdminManagers() {
               {admins.map((admin) => (
                 <div
                   key={admin.id}
-                  className="flex items-center justify-between p-4 border rounded-lg bg-card"
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border rounded-lg bg-card"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <div className="flex items-start sm:items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                       {admin.is_superadmin ? (
                         <Crown className="h-5 w-5 text-primary" />
                       ) : (
                         <Shield className="h-5 w-5 text-muted-foreground" />
                       )}
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{admin.email}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium break-all">{admin.email}</span>
                         {admin.is_superadmin && (
-                          <Badge variant="default" className="bg-primary">
+                          <Badge variant="default" className="bg-primary flex-shrink-0">
                             Главный
                           </Badge>
                         )}
@@ -308,7 +308,7 @@ export default function AdminManagers() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10 self-end sm:self-auto flex-shrink-0"
                       onClick={() => handleRemoveAdmin(admin.id)}
                     >
                       <Trash2 className="h-4 w-4" />

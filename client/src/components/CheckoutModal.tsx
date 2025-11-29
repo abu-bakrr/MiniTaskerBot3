@@ -241,28 +241,22 @@ export default function CheckoutModal({
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('upload_preset', 'ml_default');
 
-      const cloudinaryConfig = config?.cloudinary;
-      const cloudName = cloudinaryConfig?.cloudName || 'demo';
-
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-        {
-          method: 'POST',
-          body: formData,
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Upload failed');
-      }
+      const response = await fetch('/api/upload/receipt', {
+        method: 'POST',
+        body: formData,
+      });
 
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Upload failed');
+      }
+
       setReceiptUrl(data.secure_url);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading receipt:', error);
-      alert('Ошибка загрузки чека. Попробуйте еще раз.');
+      alert(error.message || 'Ошибка загрузки чека. Попробуйте еще раз.');
     } finally {
       setIsUploadingReceipt(false);
     }

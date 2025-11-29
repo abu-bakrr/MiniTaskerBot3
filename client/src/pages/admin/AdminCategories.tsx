@@ -105,14 +105,14 @@ export default function AdminCategories() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
         <div className="text-sm text-muted-foreground">
           Всего категорий: {categories.length}
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={openCreateDialog}>
+            <Button onClick={openCreateDialog} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Добавить категорию
             </Button>
@@ -163,22 +163,26 @@ export default function AdminCategories() {
       <div className="space-y-2">
         {categories.map((category, index) => (
           <Card key={category.id}>
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className="text-muted-foreground cursor-grab">
-                <GripVertical className="h-5 w-5" />
-              </div>
-              <div className="text-2xl">{category.icon || '📁'}</div>
-              <div className="flex-1">
-                <h3 className="font-semibold">{category.name}</h3>
-                <p className="text-sm text-muted-foreground">ID: {category.id}</p>
-              </div>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={() => openEditDialog(category)}>
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button size="sm" variant="destructive" onClick={() => handleDelete(category.id)}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+            <CardContent className="p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="text-muted-foreground cursor-grab flex-shrink-0">
+                    <GripVertical className="h-5 w-5" />
+                  </div>
+                  <div className="text-2xl flex-shrink-0">{category.icon || '📁'}</div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold truncate">{category.name}</h3>
+                    <p className="text-sm text-muted-foreground truncate">ID: {category.id}</p>
+                  </div>
+                </div>
+                <div className="flex gap-2 self-end sm:self-auto flex-shrink-0">
+                  <Button size="sm" variant="outline" onClick={() => openEditDialog(category)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={() => handleDelete(category.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

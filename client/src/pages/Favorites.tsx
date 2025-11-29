@@ -15,7 +15,7 @@ interface FavoritesProps {
   onBack: () => void;
   onClearAll: () => void;
   onToggleFavorite: (id: string) => void;
-  onAddToCart: (id: string) => void;
+  onAddToCart: (id: string, selectedColor?: string, selectedAttributes?: Record<string, string>) => void;
   onProductClick: (id: string) => void;
 }
 

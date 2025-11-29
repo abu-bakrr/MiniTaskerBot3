@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 import cloudinary
 import cloudinary.uploader
+import cloudinary.api
 from cryptography.fernet import Fernet
 
 app = Flask(__name__, static_folder='dist/public', static_url_path='/static')
@@ -2792,6 +2793,49 @@ def upload_image():
         result = cloudinary.uploader.upload(
             file,
             folder='telegram_shop_products',
+            resource_type='image'
+        )
+        
+        return jsonify({
+            'secure_url': result['secure_url'],
+            'public_id': result['public_id']
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/upload/receipt', methods=['POST'])
+def upload_receipt():
+    """Upload payment receipt to Cloudinary - available for authenticated users"""
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Необходима авторизация'}), 401
+        
+        config = get_cloudinary_config()
+        cloud_name = config['cloud_name']
+        api_key = config['api_key']
+        api_secret = config['api_secret']
+        
+        if not all([cloud_name, api_key, api_secret]):
+            return jsonify({'error': 'Cloudinary не настроен'}), 500
+        
+        cloudinary.config(
+            cloud_name=cloud_name,
+            api_key=api_key,
+            api_secret=api_secret
+        )
+        
+        if 'file' not in request.files:
+            return jsonify({'error': 'Файл не найден'}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'Файл не выбран'}), 400
+        
+        result = cloudinary.uploader.upload(
+            file,
+            folder='telegram_shop_receipts',
             resource_type='image'
         )
         
