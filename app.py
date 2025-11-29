@@ -2850,8 +2850,12 @@ def admin_test_cloudinary():
             return jsonify({'error': 'Not authorized'}), 401
         
         config = get_cloudinary_config()
-        if not all([config['cloud_name'], config['api_key'], config['api_secret']]):
-            return jsonify({'success': False, 'error': 'Не все настройки заполнены'}), 200
+        if not config['cloud_name']:
+            return jsonify({'success': False, 'error': 'Cloud Name не указан'}), 200
+        if not config['api_key']:
+            return jsonify({'success': False, 'error': 'API Key не указан'}), 200
+        if not config['api_secret']:
+            return jsonify({'success': False, 'error': 'API Secret не указан'}), 200
         
         cloudinary.config(
             cloud_name=config['cloud_name'],
@@ -2859,10 +2863,30 @@ def admin_test_cloudinary():
             api_secret=config['api_secret']
         )
         
-        result = cloudinary.api.ping()
-        return jsonify({'success': True, 'message': 'Подключение успешно'}), 200
+        try:
+            result = cloudinary.api.usage()
+            used_percent = 0
+            if result.get('credits') and result['credits'].get('limit'):
+                used = result['credits'].get('used_percent', 0)
+                used_percent = round(used, 1)
+            return jsonify({
+                'success': True, 
+                'message': f'Подключение успешно! Использовано {used_percent}% лимита'
+            }), 200
+        except cloudinary.exceptions.AuthorizationRequired:
+            return jsonify({'success': False, 'error': 'Неверный API Key или API Secret'}), 200
+        except cloudinary.exceptions.NotFound:
+            return jsonify({'success': False, 'error': 'Cloud Name не найден'}), 200
+        except Exception as api_error:
+            error_str = str(api_error).lower()
+            if 'unauthorized' in error_str or 'invalid' in error_str:
+                return jsonify({'success': False, 'error': 'Неверные данные авторизации'}), 200
+            elif 'not found' in error_str:
+                return jsonify({'success': False, 'error': 'Cloud Name не найден'}), 200
+            raise api_error
+            
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 200
+        return jsonify({'success': False, 'error': f'Ошибка проверки: {str(e)}'}), 200
 
 # ============================================================
 # Telegram Settings API
