@@ -299,8 +299,8 @@ export default function AdminSettings() {
   }
 
   return (
-    <div className="space-y-6">
-      <Tabs defaultValue="telegram" className="w-full">
+    <div className="space-y-6 overflow-hidden">
+      <Tabs defaultValue="telegram" className="w-full overflow-hidden">
         <div className="overflow-x-auto -mx-2 px-2">
           <TabsList className="inline-flex w-max min-w-full sm:w-full sm:grid sm:grid-cols-4 gap-1">
             <TabsTrigger value="telegram" className="whitespace-nowrap px-3 text-xs sm:text-sm">Telegram</TabsTrigger>
@@ -340,19 +340,20 @@ export default function AdminSettings() {
                     <span className="ml-2 text-xs text-green-600">(установлен)</span>
                   )}
                 </Label>
-                <div className="relative">
+                <div className="relative flex">
                   <Input
                     id="bot_token"
                     type={showTelegramToken ? 'text' : 'password'}
                     value={telegramToken}
                     onChange={(e) => setTelegramToken(e.target.value)}
-                    placeholder={telegram.has_bot_token ? '••••••••••••••••' : 'Введите Bot Token от @BotFather'}
+                    placeholder={telegram.has_bot_token ? '••••••••••••••••' : 'Bot Token от @BotFather'}
+                    className="pr-10 min-w-0 flex-1"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute right-0 top-0 h-full px-3"
+                    className="absolute right-0 top-0 h-full px-3 flex-shrink-0"
                     onClick={() => setShowTelegramToken(!showTelegramToken)}
                   >
                     {showTelegramToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -437,19 +438,20 @@ export default function AdminSettings() {
                     <span className="ml-2 text-xs text-green-600">(установлен)</span>
                   )}
                 </Label>
-                <div className="relative">
+                <div className="relative flex">
                   <Input
                     id="api_secret"
                     type={showCloudinarySecret ? 'text' : 'password'}
                     value={cloudinarySecret}
                     onChange={(e) => setCloudinarySecret(e.target.value)}
-                    placeholder={cloudinary.has_api_secret ? '••••••••••••••••' : 'Введите API Secret'}
+                    placeholder={cloudinary.has_api_secret ? '••••••••••••••••' : 'API Secret'}
+                    className="pr-10 min-w-0 flex-1"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute right-0 top-0 h-full px-3"
+                    className="absolute right-0 top-0 h-full px-3 flex-shrink-0"
                     onClick={() => setShowCloudinarySecret(!showCloudinarySecret)}
                   >
                     {showCloudinarySecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -638,8 +640,8 @@ export default function AdminSettings() {
                 />
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2 min-w-0">
                   <Label>Merchant ID</Label>
                   <Input
                     value={payments.uzum.merchant_id}
@@ -648,9 +650,10 @@ export default function AdminSettings() {
                       uzum: { ...payments.uzum, merchant_id: e.target.value }
                     })}
                     placeholder="Merchant ID"
+                    className="w-full"
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 min-w-0">
                   <Label>Service ID</Label>
                   <Input
                     value={payments.uzum.service_id}
@@ -659,6 +662,7 @@ export default function AdminSettings() {
                       uzum: { ...payments.uzum, service_id: e.target.value }
                     })}
                     placeholder="Service ID"
+                    className="w-full"
                   />
                 </div>
               </div>
@@ -719,8 +723,8 @@ export default function AdminSettings() {
                 />
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2 min-w-0">
                   <Label>Имя держателя карты</Label>
                   <Input
                     value={payments.card_transfer.card_holder}
@@ -729,9 +733,10 @@ export default function AdminSettings() {
                       card_transfer: { ...payments.card_transfer, card_holder: e.target.value }
                     })}
                     placeholder="IVAN IVANOV"
+                    className="w-full"
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 min-w-0">
                   <Label>Название банка</Label>
                   <Input
                     value={payments.card_transfer.bank_name}
@@ -740,6 +745,7 @@ export default function AdminSettings() {
                       card_transfer: { ...payments.card_transfer, bank_name: e.target.value }
                     })}
                     placeholder="Uzcard / Humo"
+                    className="w-full"
                   />
                 </div>
               </div>
@@ -779,29 +785,32 @@ export default function AdminSettings() {
                 />
               </div>
               
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>Широта по умолчанию</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-2 min-w-0">
+                  <Label>Широта</Label>
                   <Input
                     value={yandexMaps.default_lat}
                     onChange={(e) => setYandexMaps({ ...yandexMaps, default_lat: e.target.value })}
                     placeholder="41.311081"
+                    className="w-full"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Долгота по умолчанию</Label>
+                <div className="space-y-2 min-w-0">
+                  <Label>Долгота</Label>
                   <Input
                     value={yandexMaps.default_lng}
                     onChange={(e) => setYandexMaps({ ...yandexMaps, default_lng: e.target.value })}
                     placeholder="69.240562"
+                    className="w-full"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Зум по умолчанию</Label>
+                <div className="space-y-2 min-w-0">
+                  <Label>Зум</Label>
                   <Input
                     value={yandexMaps.default_zoom}
                     onChange={(e) => setYandexMaps({ ...yandexMaps, default_zoom: e.target.value })}
                     placeholder="12"
+                    className="w-full"
                   />
                 </div>
               </div>

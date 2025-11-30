@@ -66,8 +66,8 @@ export default function AdminLayout() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 overflow-x-hidden">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full overflow-hidden">
           <div className="overflow-x-auto -mx-2 px-2 mb-6">
             <TabsList className="inline-flex w-max min-w-full sm:w-full sm:grid sm:grid-cols-5 lg:grid-cols-6 gap-1">
               <TabsTrigger value="products" className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm whitespace-nowrap">

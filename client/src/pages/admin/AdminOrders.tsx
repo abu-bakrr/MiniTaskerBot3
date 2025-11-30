@@ -269,9 +269,10 @@ export default function AdminOrders() {
                 </div>
                 <div className="flex gap-2 mt-2">
                   <Input
-                    placeholder="Или введите свой статус"
+                    placeholder="Или свой статус"
                     value={customStatus}
                     onChange={(e) => setCustomStatus(e.target.value)}
+                    className="min-w-0 flex-1"
                   />
                   <Button 
                     variant="outline"
@@ -282,6 +283,7 @@ export default function AdminOrders() {
                       }
                     }}
                     disabled={!customStatus}
+                    className="flex-shrink-0"
                   >
                     Применить
                   </Button>
