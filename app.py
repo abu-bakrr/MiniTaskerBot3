@@ -3014,6 +3014,103 @@ def admin_test_telegram():
         return jsonify({'success': False, 'error': str(e)}), 200
 
 # ============================================================
+# SMTP Settings API
+# ============================================================
+
+@app.route('/api/admin/settings/smtp', methods=['GET'])
+def admin_get_smtp_settings():
+    try:
+        admin_id = require_admin()
+        if not admin_id:
+            return jsonify({'error': 'Not authorized'}), 401
+        
+        config = get_smtp_config()
+        return jsonify({
+            'host': config['host'],
+            'port': str(config['port']),
+            'user': config['user'],
+            'has_password': bool(config['password']),
+            'from_email': config['from_email'],
+            'from_name': config['from_name'],
+            'use_tls': config['use_tls']
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/settings/smtp', methods=['PUT'])
+def admin_update_smtp_settings():
+    try:
+        admin_id = require_admin()
+        if not admin_id:
+            return jsonify({'error': 'Not authorized'}), 401
+        
+        data = request.json
+        host = data.get('host', '')
+        port = data.get('port', '587')
+        user = data.get('user', '')
+        password = data.get('password')
+        from_email = data.get('from_email', '')
+        from_name = data.get('from_name', '')
+        use_tls = data.get('use_tls', True)
+        
+        set_platform_setting('smtp_host', host, is_secret=False)
+        set_platform_setting('smtp_port', str(port), is_secret=False)
+        set_platform_setting('smtp_user', user, is_secret=False)
+        set_platform_setting('smtp_from_email', from_email, is_secret=False)
+        set_platform_setting('smtp_from_name', from_name, is_secret=False)
+        set_platform_setting('smtp_use_tls', 'true' if use_tls else 'false', is_secret=False)
+        
+        if password:
+            set_platform_setting('smtp_password', password, is_secret=True)
+        
+        return jsonify({'message': 'Настройки SMTP сохранены'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/settings/smtp/test', methods=['POST'])
+def admin_test_smtp():
+    try:
+        admin_id = require_admin()
+        if not admin_id:
+            return jsonify({'error': 'Not authorized'}), 401
+        
+        config = get_smtp_config()
+        if not config['host'] or not config['user'] or not config['password']:
+            return jsonify({'success': False, 'error': 'SMTP не полностью настроен (host, user или password отсутствуют)'}), 200
+        
+        # Get admin email for test
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('SELECT email FROM users WHERE id = %s', (admin_id,))
+        admin_user = cur.fetchone()
+        cur.close()
+        conn.close()
+        
+        if not admin_user or not admin_user.get('email'):
+            return jsonify({'success': False, 'error': 'Email администратора не найден'}), 200
+        
+        test_email = admin_user['email']
+        
+        html_content = """
+        <html>
+        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #333;">✅ Тестовое письмо</h2>
+            <p>Настройки SMTP работают корректно!</p>
+            <p style="color: #666; font-size: 14px;">Это тестовое сообщение от вашего магазина.</p>
+        </body>
+        </html>
+        """
+        
+        success = send_email(test_email, "Тест SMTP настроек", html_content)
+        
+        if success:
+            return jsonify({'success': True, 'message': f'Тестовое письмо отправлено на {test_email}'}), 200
+        else:
+            return jsonify({'success': False, 'error': 'Не удалось отправить письмо. Проверьте настройки.'}), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 200
+
+# ============================================================
 # Payment Settings API
 # ============================================================
 

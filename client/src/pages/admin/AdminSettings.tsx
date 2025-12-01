@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Cloud, Eye, EyeOff, Check, X, Loader2, Send, CreditCard, MapPin } from 'lucide-react';
+import { Cloud, Eye, EyeOff, Check, X, Loader2, Send, CreditCard, MapPin, Mail } from 'lucide-react';
 
 interface CloudinarySettings {
   cloud_name: string;
@@ -52,6 +52,16 @@ interface YandexMapsSettings {
   default_zoom: string;
 }
 
+interface SmtpSettings {
+  host: string;
+  port: string;
+  user: string;
+  has_password: boolean;
+  from_email: string;
+  from_name: string;
+  use_tls: boolean;
+}
+
 export default function AdminSettings() {
   const [loading, setLoading] = useState(true);
   
@@ -88,6 +98,18 @@ export default function AdminSettings() {
     default_zoom: '12'
   });
   
+  const [smtp, setSmtp] = useState<SmtpSettings>({
+    host: '',
+    port: '587',
+    user: '',
+    has_password: false,
+    from_email: '',
+    from_name: '',
+    use_tls: true
+  });
+  const [smtpPassword, setSmtpPassword] = useState('');
+  const [showSmtpPassword, setShowSmtpPassword] = useState(false);
+  
   const [saving, setSaving] = useState<string | null>(null);
   const [testing, setTesting] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<{ key: string; success: boolean; message: string } | null>(null);
@@ -99,17 +121,19 @@ export default function AdminSettings() {
 
   const loadAllSettings = async () => {
     try {
-      const [cloudinaryRes, telegramRes, paymentsRes, yandexRes] = await Promise.all([
+      const [cloudinaryRes, telegramRes, paymentsRes, yandexRes, smtpRes] = await Promise.all([
         fetch('/api/admin/settings/cloudinary'),
         fetch('/api/admin/settings/telegram'),
         fetch('/api/admin/settings/payments'),
-        fetch('/api/admin/settings/yandex_maps')
+        fetch('/api/admin/settings/yandex_maps'),
+        fetch('/api/admin/settings/smtp')
       ]);
       
       if (cloudinaryRes.ok) setCloudinary(await cloudinaryRes.json());
       if (telegramRes.ok) setTelegram(await telegramRes.json());
       if (paymentsRes.ok) setPayments(await paymentsRes.json());
       if (yandexRes.ok) setYandexMaps(await yandexRes.json());
+      if (smtpRes.ok) setSmtp(await smtpRes.json());
     } catch (error) {
       console.error('Failed to load settings:', error);
     } finally {
@@ -290,6 +314,54 @@ export default function AdminSettings() {
     }
   };
 
+  const handleSaveSmtp = async () => {
+    setSaving('smtp');
+    try {
+      const payload: any = {
+        host: smtp.host,
+        port: smtp.port,
+        user: smtp.user,
+        from_email: smtp.from_email,
+        from_name: smtp.from_name,
+        use_tls: smtp.use_tls
+      };
+      if (smtpPassword) payload.password = smtpPassword;
+      
+      const response = await fetch('/api/admin/settings/smtp', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      if (response.ok) {
+        showSaveMessage('smtp', 'Настройки сохранены');
+        setSmtpPassword('');
+        loadAllSettings();
+      } else {
+        const data = await response.json();
+        showSaveMessage('smtp', data.error, true);
+      }
+    } catch (error) {
+      showSaveMessage('smtp', 'Ошибка сохранения', true);
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const handleTestSmtp = async () => {
+    setTesting('smtp');
+    setTestResult(null);
+    try {
+      const response = await fetch('/api/admin/settings/smtp/test', { method: 'POST' });
+      const data = await response.json();
+      setTestResult({ key: 'smtp', success: data.success, message: data.success ? data.message : data.error });
+    } catch (error) {
+      setTestResult({ key: 'smtp', success: false, message: 'Ошибка проверки' });
+    } finally {
+      setTesting(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -302,8 +374,9 @@ export default function AdminSettings() {
     <div className="space-y-6 overflow-hidden">
       <Tabs defaultValue="telegram" className="w-full overflow-hidden">
         <div className="overflow-x-auto -mx-2 px-2">
-          <TabsList className="inline-flex w-max min-w-full sm:w-full sm:grid sm:grid-cols-4 gap-1">
+          <TabsList className="inline-flex w-max min-w-full sm:w-full sm:grid sm:grid-cols-5 gap-1">
             <TabsTrigger value="telegram" className="whitespace-nowrap px-3 text-xs sm:text-sm">Telegram</TabsTrigger>
+            <TabsTrigger value="smtp" className="whitespace-nowrap px-3 text-xs sm:text-sm">SMTP</TabsTrigger>
             <TabsTrigger value="cloudinary" className="whitespace-nowrap px-3 text-xs sm:text-sm">Cloudinary</TabsTrigger>
             <TabsTrigger value="payments" className="whitespace-nowrap px-3 text-xs sm:text-sm">Платежи</TabsTrigger>
             <TabsTrigger value="maps" className="whitespace-nowrap px-3 text-xs sm:text-sm">Карты</TabsTrigger>
@@ -395,6 +468,148 @@ export default function AdminSettings() {
                   <span className="text-sm">{testResult.message}</span>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="smtp" className="space-y-4 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                SMTP (Email)
+              </CardTitle>
+              <CardDescription>
+                Настройки для отправки писем (восстановление пароля)
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="smtp_host">SMTP Host</Label>
+                  <Input
+                    id="smtp_host"
+                    value={smtp.host}
+                    onChange={(e) => setSmtp({ ...smtp, host: e.target.value })}
+                    placeholder="smtp.gmail.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="smtp_port">Port</Label>
+                  <Input
+                    id="smtp_port"
+                    value={smtp.port}
+                    onChange={(e) => setSmtp({ ...smtp, port: e.target.value })}
+                    placeholder="587"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="smtp_user">Email (логин)</Label>
+                <Input
+                  id="smtp_user"
+                  type="email"
+                  value={smtp.user}
+                  onChange={(e) => setSmtp({ ...smtp, user: e.target.value })}
+                  placeholder="your-email@gmail.com"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="smtp_password">
+                  Пароль
+                  {smtp.has_password && (
+                    <span className="ml-2 text-xs text-green-600">(установлен)</span>
+                  )}
+                </Label>
+                <div className="relative flex">
+                  <Input
+                    id="smtp_password"
+                    type={showSmtpPassword ? 'text' : 'password'}
+                    value={smtpPassword}
+                    onChange={(e) => setSmtpPassword(e.target.value)}
+                    placeholder={smtp.has_password ? '••••••••••••••••' : 'Пароль приложения'}
+                    className="pr-10 min-w-0 flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-0 top-0 h-full px-3 flex-shrink-0"
+                    onClick={() => setShowSmtpPassword(!showSmtpPassword)}
+                  >
+                    {showSmtpPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="smtp_from_email">Email отправителя</Label>
+                  <Input
+                    id="smtp_from_email"
+                    type="email"
+                    value={smtp.from_email}
+                    onChange={(e) => setSmtp({ ...smtp, from_email: e.target.value })}
+                    placeholder="noreply@yoursite.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="smtp_from_name">Имя отправителя</Label>
+                  <Input
+                    id="smtp_from_name"
+                    value={smtp.from_name}
+                    onChange={(e) => setSmtp({ ...smtp, from_name: e.target.value })}
+                    placeholder="Monvoir"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Использовать TLS</Label>
+                  <p className="text-sm text-muted-foreground">Рекомендуется для безопасности</p>
+                </div>
+                <Switch
+                  checked={smtp.use_tls}
+                  onCheckedChange={(checked) => setSmtp({ ...smtp, use_tls: checked })}
+                />
+              </div>
+              
+              <div className="flex gap-3 pt-4">
+                <Button onClick={handleSaveSmtp} disabled={saving === 'smtp'}>
+                  {saving === 'smtp' ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Сохранение...</> : 'Сохранить'}
+                </Button>
+                <Button variant="outline" onClick={handleTestSmtp} disabled={testing === 'smtp'}>
+                  {testing === 'smtp' ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Отправка...</> : 'Отправить тест'}
+                </Button>
+              </div>
+              
+              {saveMessage?.key === 'smtp' && (
+                <p className={`text-sm ${saveMessage.message.includes('Ошибка') ? 'text-red-600' : 'text-green-600'}`}>
+                  {saveMessage.message}
+                </p>
+              )}
+              
+              {testResult?.key === 'smtp' && (
+                <div className={`flex items-center gap-2 p-3 rounded-md ${testResult.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                  {testResult.success ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
+                  <span className="text-sm">{testResult.message}</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Настройка SMTP для Gmail</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground space-y-2">
+              <p>1. Включите двухфакторную аутентификацию в Google</p>
+              <p>2. Перейдите: <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer" className="text-primary underline">Пароли приложений</a></p>
+              <p>3. Создайте пароль для "Почта" и используйте его здесь</p>
+              <p className="pt-2"><strong>Host:</strong> smtp.gmail.com, <strong>Port:</strong> 587</p>
             </CardContent>
           </Card>
         </TabsContent>
