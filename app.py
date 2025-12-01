@@ -2200,6 +2200,9 @@ def add_admin():
         if not user_id:
             return jsonify({'error': 'ID пользователя обязателен'}), 400
         
+        # Convert user_id to string for VARCHAR comparison
+        user_id = str(user_id)
+        
         conn = get_db_connection()
         cur = conn.cursor()
         
@@ -2241,6 +2244,9 @@ def remove_admin(admin_id):
         superadmin_id = require_superadmin()
         if not superadmin_id:
             return jsonify({'error': 'Только главный администратор может удалять админов'}), 403
+        
+        # Convert admin_id to string for VARCHAR comparison
+        admin_id = str(admin_id)
         
         # Prevent superadmin from removing themselves
         if admin_id == superadmin_id:
