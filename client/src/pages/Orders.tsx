@@ -6,7 +6,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useConfig } from '@/hooks/useConfig';
-import { formatPrice } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface OrderItem {
@@ -90,7 +89,7 @@ const formatDate = (dateString: string): string => {
 
 export default function Orders() {
   const [, navigate] = useLocation();
-  const { config } = useConfig();
+  const { config, formatPrice } = useConfig();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedOrder, setExpandedOrder] = useState<number | null>(null);
