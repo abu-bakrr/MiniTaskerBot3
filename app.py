@@ -640,6 +640,22 @@ def get_config():
         config_path = os.path.join(os.path.dirname(__file__), 'config', 'settings.json')
         with open(config_path, 'r', encoding='utf-8') as f:
             config = json.load(f)
+        
+        # Add Yandex Maps settings from database
+        try:
+            yandex_config = get_yandex_maps_config()
+            if yandex_config.get('api_key'):
+                config['yandexMaps'] = {
+                    'apiKey': yandex_config.get('api_key', ''),
+                    'defaultCenter': [
+                        float(yandex_config.get('default_lat', '41.311081')),
+                        float(yandex_config.get('default_lng', '69.240562'))
+                    ],
+                    'defaultZoom': int(yandex_config.get('default_zoom', '12'))
+                }
+        except Exception as e:
+            print(f"Warning: Could not load Yandex Maps config: {e}")
+        
         return Response(
             json.dumps(config, ensure_ascii=False),
             mimetype='application/json; charset=utf-8'
@@ -1233,7 +1249,7 @@ def create_order():
         # Create order in database
         cur.execute(
             'INSERT INTO orders (user_id, total, status) VALUES (%s, %s, %s) RETURNING *',
-            (user_id, total, 'pending')
+            (user_id, total, 'new')
         )
         order = cur.fetchone()
         order_id = order['id']
@@ -1339,11 +1355,11 @@ def checkout_order():
         
         print(f"Total (calculated from DB): {total}")
         
-        # Determine initial status for card_transfer (awaiting receipt verification)
-        initial_status = 'pending'
+        # Determine initial status for new orders
+        initial_status = 'new'  # All orders start as "Новый"
         initial_payment_status = 'pending'
         if payment_method == 'card_transfer' and payment_receipt_url:
-            initial_status = 'reviewing'  # "Рассматривается" - awaiting admin verification
+            initial_status = 'new'  # Still "Новый" but with receipt uploaded
             initial_payment_status = 'awaiting_verification'
         
         # Create order in database with delivery info

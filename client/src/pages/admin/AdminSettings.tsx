@@ -461,12 +461,12 @@ export default function AdminSettings() {
                 </p>
               </div>
               
-              <div className="flex gap-3 pt-4">
-                <Button onClick={handleSaveTelegram} disabled={saving === 'telegram'}>
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
+                <Button onClick={handleSaveTelegram} disabled={saving === 'telegram'} className="w-full sm:w-auto">
                   {saving === 'telegram' ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Сохранение...</> : 'Сохранить'}
                 </Button>
-                <Button variant="outline" onClick={handleTestTelegram} disabled={testing === 'telegram'}>
-                  {testing === 'telegram' ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Отправка...</> : 'Отправить тест'}
+                <Button variant="outline" onClick={handleTestTelegram} disabled={testing === 'telegram'} className="w-full sm:w-auto">
+                  {testing === 'telegram' ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Отправка...</> : 'Тест'}
                 </Button>
               </div>
               
@@ -591,12 +591,12 @@ export default function AdminSettings() {
                 />
               </div>
               
-              <div className="flex gap-3 pt-4">
-                <Button onClick={handleSaveSmtp} disabled={saving === 'smtp'}>
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
+                <Button onClick={handleSaveSmtp} disabled={saving === 'smtp'} className="w-full sm:w-auto">
                   {saving === 'smtp' ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Сохранение...</> : 'Сохранить'}
                 </Button>
-                <Button variant="outline" onClick={handleTestSmtp} disabled={testing === 'smtp'}>
-                  {testing === 'smtp' ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Отправка...</> : 'Отправить тест'}
+                <Button variant="outline" onClick={handleTestSmtp} disabled={testing === 'smtp'} className="w-full sm:w-auto">
+                  {testing === 'smtp' ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Отправка...</> : 'Тест'}
                 </Button>
               </div>
               
@@ -688,12 +688,12 @@ export default function AdminSettings() {
                 </div>
               </div>
               
-              <div className="flex gap-3 pt-4">
-                <Button onClick={handleSaveCloudinary} disabled={saving === 'cloudinary'}>
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
+                <Button onClick={handleSaveCloudinary} disabled={saving === 'cloudinary'} className="w-full sm:w-auto">
                   {saving === 'cloudinary' ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Сохранение...</> : 'Сохранить'}
                 </Button>
-                <Button variant="outline" onClick={handleTestCloudinary} disabled={testing === 'cloudinary'}>
-                  {testing === 'cloudinary' ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Проверка...</> : 'Проверить подключение'}
+                <Button variant="outline" onClick={handleTestCloudinary} disabled={testing === 'cloudinary'} className="w-full sm:w-auto">
+                  {testing === 'cloudinary' ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Проверка...</> : 'Проверить'}
                 </Button>
               </div>
               
@@ -1044,12 +1044,12 @@ export default function AdminSettings() {
                 </div>
               </div>
               
-              <div className="flex gap-3 pt-4">
-                <Button onClick={handleSaveYandexMaps} disabled={saving === 'yandex'}>
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
+                <Button onClick={handleSaveYandexMaps} disabled={saving === 'yandex'} className="w-full sm:w-auto">
                   {saving === 'yandex' ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Сохранение...</> : 'Сохранить'}
                 </Button>
-                <Button variant="outline" onClick={handleTestYandexMaps} disabled={testing === 'yandex'}>
-                  {testing === 'yandex' ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Проверка...</> : 'Проверить подключение'}
+                <Button variant="outline" onClick={handleTestYandexMaps} disabled={testing === 'yandex'} className="w-full sm:w-auto">
+                  {testing === 'yandex' ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Проверка...</> : 'Проверить'}
                 </Button>
               </div>
               

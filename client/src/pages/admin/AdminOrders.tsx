@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, Package, User, MapPin, Phone, Calendar, CreditCard, Receipt, X, ExternalLink } from 'lucide-react';
+import { Eye, Package, User, MapPin, Phone, Calendar, CreditCard, Receipt, X, ExternalLink, Search } from 'lucide-react';
 
 interface OrderItem {
   id: string;
@@ -39,24 +39,41 @@ interface Order {
 }
 
 const DEFAULT_STATUSES = [
-  { value: 'pending', label: 'Ожидает оплаты' },
+  { value: 'new', label: 'Новый' },
+  { value: 'confirmed', label: 'Подтверждён' },
+  { value: 'awaiting_payment', label: 'Ожидает оплаты' },
   { value: 'paid', label: 'Оплачен' },
   { value: 'processing', label: 'Собирается' },
   { value: 'shipped', label: 'В пути' },
   { value: 'delivered', label: 'Доставлен' },
-  { value: 'cancelled', label: 'Отменен' },
+  { value: 'cancelled', label: 'Отменён' },
 ];
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [customStatus, setCustomStatus] = useState('');
   const [orderStatuses, setOrderStatuses] = useState(DEFAULT_STATUSES);
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
   const [receiptImageUrl, setReceiptImageUrl] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const filteredOrders = useMemo(() => {
+    if (!searchQuery.trim()) return orders;
+    const query = searchQuery.toLowerCase();
+    return orders.filter(order => 
+      order.customer_name?.toLowerCase().includes(query) ||
+      order.customer_phone?.toLowerCase().includes(query) ||
+      order.user_email?.toLowerCase().includes(query) ||
+      order.first_name?.toLowerCase().includes(query) ||
+      order.last_name?.toLowerCase().includes(query) ||
+      order.id.toLowerCase().includes(query) ||
+      order.delivery_address?.toLowerCase().includes(query)
+    );
+  }, [orders, searchQuery]);
 
   const openReceiptModal = (url: string) => {
     setReceiptImageUrl(url);
@@ -149,12 +166,16 @@ export default function AdminOrders() {
     const label = statusConfig?.label || status;
     
     const colors: Record<string, string> = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      paid: 'bg-green-100 text-green-800',
-      processing: 'bg-blue-100 text-blue-800',
+      new: 'bg-blue-100 text-blue-800',
+      confirmed: 'bg-cyan-100 text-cyan-800',
+      awaiting_payment: 'bg-yellow-100 text-yellow-800',
+      paid: 'bg-emerald-100 text-emerald-800',
+      processing: 'bg-amber-100 text-amber-800',
       shipped: 'bg-purple-100 text-purple-800',
       delivered: 'bg-green-100 text-green-800',
       cancelled: 'bg-red-100 text-red-800',
+      pending: 'bg-yellow-100 text-yellow-800',
+      reviewing: 'bg-orange-100 text-orange-800',
     };
 
     return (
@@ -170,28 +191,39 @@ export default function AdminOrders() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="flex gap-2 items-center">
-          <Label className="whitespace-nowrap">Фильтр:</Label>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Все статусы" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Все статусы</SelectItem>
-              {orderStatuses.map(status => (
-                <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className="flex flex-col gap-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Поиск по имени, телефону, email, адресу..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
         </div>
-        <div className="text-sm text-muted-foreground">
-          Всего заказов: {orders.length}
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <div className="flex gap-2 items-center">
+            <Label className="whitespace-nowrap">Статус:</Label>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Все" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все</SelectItem>
+                {orderStatuses.map(status => (
+                  <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="text-sm text-muted-foreground">
+            Найдено: {filteredOrders.length} из {orders.length}
+          </div>
         </div>
       </div>
 
       <div className="space-y-4">
-        {orders.map(order => (
+        {filteredOrders.map(order => (
           <Card key={order.id}>
             <CardContent className="p-4">
               <div className="flex flex-col sm:flex-row gap-4 justify-between">
@@ -225,9 +257,9 @@ export default function AdminOrders() {
         ))}
       </div>
 
-      {orders.length === 0 && (
+      {filteredOrders.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
-          Заказы не найдены
+          {orders.length === 0 ? 'Заказы не найдены' : 'Ничего не найдено по запросу'}
         </div>
       )}
 
