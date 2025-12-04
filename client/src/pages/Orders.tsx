@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useLocation } from 'wouter';
-import { ArrowLeft, Package, ChevronDown, MapPin, CreditCard, Clock, CheckCircle2, Truck, PackageCheck, MessageCircle, Phone, Copy, Check, Image as ImageIcon, Search, RefreshCw, ShoppingCart, Sparkles, Ban, Wallet, PackageOpen, FileCheck } from 'lucide-react';
+import { ArrowLeft, Package, ChevronDown, MapPin, CreditCard, Clock, CheckCircle2, Truck, PackageCheck, MessageCircle, Phone, Copy, Check, Image as ImageIcon, Search, RefreshCw, ShoppingCart, Sparkles, Ban, Wallet, PackageOpen, FileCheck, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useConfig } from '@/hooks/useConfig';
+import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -112,6 +113,7 @@ const formatRelativeDate = (dateString: string): string => {
 export default function Orders() {
   const [, navigate] = useLocation();
   const { config, formatPrice } = useConfig();
+  const { addToCart } = useCart();
   const { toast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -121,6 +123,7 @@ export default function Orders() {
   const [searchQuery, setSearchQuery] = useState('');
   const [lastFetchTime, setLastFetchTime] = useState<Date | null>(null);
   const [newOrderIds, setNewOrderIds] = useState<Set<number>>(new Set());
+  const [isRepeating, setIsRepeating] = useState(false);
 
   const orderStatuses = config?.orderStatuses || {};
   const statusSteps = useMemo(() => getStatusSteps(orderStatuses), [orderStatuses]);
@@ -226,49 +229,27 @@ export default function Orders() {
   };
 
   const repeatOrder = async (order: Order) => {
+    if (isRepeating) return;
+    setIsRepeating(true);
+    
     try {
-      const results = await Promise.allSettled(
-        order.items.map(item =>
-          fetch('/api/cart', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              product_id: item.product_id,
-              quantity: item.quantity,
-              selected_color: item.selected_color,
-              selected_attributes: item.selected_attributes,
-            }),
-          }).then(res => {
-            if (!res.ok) throw new Error('Failed to add item');
-            return res;
-          })
-        )
-      );
+      let addedCount = 0;
       
-      const succeeded = results.filter(r => r.status === 'fulfilled').length;
-      const failed = results.filter(r => r.status === 'rejected').length;
-      
-      if (failed > 0 && succeeded === 0) {
-        toast({
-          title: 'Ошибка',
-          description: 'Не удалось добавить товары в корзину',
-          variant: 'destructive',
-        });
-        return;
+      for (const item of order.items) {
+        for (let i = 0; i < item.quantity; i++) {
+          addToCart(
+            String(item.product_id), 
+            item.selected_color, 
+            item.selected_attributes
+          );
+          addedCount++;
+        }
       }
       
-      if (failed > 0) {
-        toast({
-          title: 'Частично добавлено',
-          description: `Добавлено ${succeeded} из ${order.items.length} товаров`,
-          variant: 'default',
-        });
-      } else {
-        toast({
-          title: 'Товары добавлены в корзину',
-          description: `${succeeded} товар(ов) из заказа #${order.id}`,
-        });
-      }
+      toast({
+        title: 'Товары добавлены в корзину',
+        description: `${order.items.length} товар(ов) из заказа #${order.id}`,
+      });
       
       navigate('/cart');
     } catch (error) {
@@ -277,6 +258,8 @@ export default function Orders() {
         description: 'Не удалось добавить товары в корзину',
         variant: 'destructive',
       });
+    } finally {
+      setIsRepeating(false);
     }
   };
 
@@ -609,13 +592,18 @@ export default function Orders() {
                             <Button
                               variant="outline"
                               className="flex-1"
+                              disabled={isRepeating}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 repeatOrder(order);
                               }}
                             >
-                              <ShoppingCart className="h-4 w-4 mr-2" />
-                              Повторить заказ
+                              {isRepeating ? (
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              ) : (
+                                <ShoppingCart className="h-4 w-4 mr-2" />
+                              )}
+                              {isRepeating ? 'Добавляем...' : 'Повторить заказ'}
                             </Button>
                             
                             {config?.managerContact && (
