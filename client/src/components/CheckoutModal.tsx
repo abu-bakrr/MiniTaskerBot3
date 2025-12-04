@@ -422,17 +422,20 @@ export default function CheckoutModal({
                         Вы можете указать адрес в поле выше
                       </p>
                     </div>
-                  ) : !mapLoaded ? (
-                    <div className="h-[300px] flex flex-col items-center justify-center bg-muted/30">
-                      <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
-                      <p className="text-sm text-muted-foreground">Загрузка карты...</p>
-                    </div>
                   ) : (
-                    <div
-                      ref={mapContainerRef}
-                      className="h-[300px] w-full"
-                      style={{ minHeight: '300px' }}
-                    />
+                    <div className="relative">
+                      <div
+                        ref={mapContainerRef}
+                        className="h-[300px] w-full"
+                        style={{ minHeight: '300px' }}
+                      />
+                      {!mapLoaded && (
+                        <div className="absolute inset-0 h-[300px] flex flex-col items-center justify-center bg-muted/80 z-20">
+                          <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
+                          <p className="text-sm text-muted-foreground">Загрузка карты...</p>
+                        </div>
+                      )}
+                    </div>
                   )}
                   
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/90 to-transparent p-3 pointer-events-none">
