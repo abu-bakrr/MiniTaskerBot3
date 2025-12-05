@@ -50,6 +50,16 @@ const DEFAULT_STATUSES = [
 
 const STATUS_ORDER = ['reviewing', 'awaiting_payment', 'paid', 'processing', 'shipped', 'delivered', 'cancelled'];
 
+const LEGACY_STATUS_MAP: Record<string, string> = {
+  'new': 'reviewing',
+  'confirmed': 'reviewing',
+  'pending': 'reviewing',
+};
+
+const normalizeStatus = (status: string): string => {
+  return LEGACY_STATUS_MAP[status] || status;
+};
+
 export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
