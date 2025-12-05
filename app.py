@@ -1290,7 +1290,7 @@ def create_order():
         # Create order in database
         cur.execute(
             'INSERT INTO orders (user_id, total, status) VALUES (%s, %s, %s) RETURNING *',
-            (user_id, total, 'new')
+            (user_id, total, 'awaiting_payment')
         )
         order = cur.fetchone()
         order_id = order['id']
@@ -1397,10 +1397,10 @@ def checkout_order():
         print(f"Total (calculated from DB): {total}")
         
         # Determine initial status for new orders
-        initial_status = 'new'  # All orders start as "Новый"
+        initial_status = 'awaiting_payment'  # All orders start as "Ожидает оплаты"
         initial_payment_status = 'pending'
         if payment_method == 'card_transfer' and payment_receipt_url:
-            initial_status = 'new'  # Still "Новый" but with receipt uploaded
+            initial_status = 'awaiting_payment'  # Still "Ожидает оплаты" but with receipt uploaded
             initial_payment_status = 'awaiting_verification'
         
         # Create order in database with delivery info

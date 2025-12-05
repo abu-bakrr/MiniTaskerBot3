@@ -34,37 +34,28 @@ interface Order {
 }
 
 const DEFAULT_STATUS_CONFIG: Record<string, { label: string; icon: any; color: string }> = {
-  new: { label: 'Новый', icon: Sparkles, color: 'bg-blue-100 text-blue-800 border-blue-200' },
-  confirmed: { label: 'Подтверждён', icon: CheckCircle2, color: 'bg-cyan-100 text-cyan-800 border-cyan-200' },
-  awaiting_payment: { label: 'Ожидает оплаты', icon: Wallet, color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+  awaiting_payment: { label: 'Ожидает оплаты', icon: Wallet, color: 'bg-amber-100 text-amber-800 border-amber-200' },
   paid: { label: 'Оплачен', icon: FileCheck, color: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
-  processing: { label: 'Собирается', icon: Package, color: 'bg-amber-100 text-amber-800 border-amber-200' },
+  processing: { label: 'Собирается', icon: Package, color: 'bg-blue-100 text-blue-800 border-blue-200' },
   shipped: { label: 'В пути', icon: Truck, color: 'bg-purple-100 text-purple-800 border-purple-200' },
   delivered: { label: 'Доставлен', icon: PackageCheck, color: 'bg-green-100 text-green-800 border-green-200' },
   cancelled: { label: 'Отменён', icon: Ban, color: 'bg-red-100 text-red-800 border-red-200' },
 };
 
-const STATUS_ORDER = ['new', 'confirmed', 'awaiting_payment', 'paid', 'processing', 'shipped', 'delivered'];
+const STATUS_ORDER = ['awaiting_payment', 'paid', 'processing', 'shipped', 'delivered'];
+
+const LEGACY_STATUS_MAP: Record<string, string> = {
+  'new': 'awaiting_payment',
+  'confirmed': 'awaiting_payment',
+  'pending': 'awaiting_payment',
+};
+
+const normalizeStatus = (status: string): string => {
+  return LEGACY_STATUS_MAP[status] || status;
+};
 
 const getStatusSteps = (orderStatuses: Record<string, string>) => {
-  const configKeys = Object.keys(orderStatuses).filter(k => k !== 'cancelled');
-  
-  if (configKeys.length === 0) {
-    return STATUS_ORDER.map(key => ({
-      key,
-      label: DEFAULT_STATUS_CONFIG[key]?.label || key,
-      icon: DEFAULT_STATUS_CONFIG[key]?.icon || Package,
-    }));
-  }
-  
-  const sortedKeys = STATUS_ORDER.filter(key => configKeys.includes(key));
-  configKeys.forEach(key => {
-    if (!sortedKeys.includes(key)) {
-      sortedKeys.push(key);
-    }
-  });
-  
-  return sortedKeys.map(key => ({
+  return STATUS_ORDER.map(key => ({
     key,
     label: orderStatuses[key] || DEFAULT_STATUS_CONFIG[key]?.label || key,
     icon: DEFAULT_STATUS_CONFIG[key]?.icon || Package,
@@ -128,17 +119,20 @@ export default function Orders() {
 
   const getStatusIndex = useCallback((status: string): number => {
     if (status === 'cancelled') return -1;
-    const index = statusSteps.findIndex(s => s.key === status);
+    const normalizedStatus = normalizeStatus(status);
+    const index = statusSteps.findIndex(s => s.key === normalizedStatus);
     return index >= 0 ? index : 0;
   }, [statusSteps]);
 
   const getStatusColor = (status: string): string => {
-    return DEFAULT_STATUS_CONFIG[status]?.color || 'bg-gray-100 text-gray-800 border-gray-200';
+    const normalizedStatus = normalizeStatus(status);
+    return DEFAULT_STATUS_CONFIG[normalizedStatus]?.color || 'bg-gray-100 text-gray-800 border-gray-200';
   };
 
   const getStatusLabel = (status: string): string => {
-    if (orderStatuses[status]) return orderStatuses[status];
-    return DEFAULT_STATUS_CONFIG[status]?.label || status;
+    const normalizedStatus = normalizeStatus(status);
+    if (orderStatuses[normalizedStatus]) return orderStatuses[normalizedStatus];
+    return DEFAULT_STATUS_CONFIG[normalizedStatus]?.label || status;
   };
 
   const filteredOrders = useMemo(() => {
@@ -375,46 +369,47 @@ export default function Orders() {
               return (
                 <Card 
                   key={order.id} 
-                  className={`overflow-hidden transition-all ${isNew ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+                  className={`overflow-hidden transition-all duration-300 hover:shadow-lg border-border/60 ${isNew ? 'ring-2 ring-primary ring-offset-2' : ''} ${isExpanded ? 'shadow-md' : ''}`}
                 >
                   <div
-                    className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                    className="p-4 cursor-pointer hover:bg-muted/30 transition-colors"
                     onClick={() => toggleOrder(order.id)}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               copyOrderId(order.id);
                             }}
-                            className="text-sm font-mono text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                            className="text-sm font-mono font-medium text-foreground/70 hover:text-foreground flex items-center gap-1.5 transition-colors bg-muted/50 px-2 py-0.5 rounded-md"
                           >
                             #{order.id}
                             {copiedId === order.id ? (
                               <Check className="h-3 w-3 text-green-500" />
                             ) : (
-                              <Copy className="h-3 w-3" />
+                              <Copy className="h-3 w-3 opacity-50" />
                             )}
                           </button>
-                          <Badge variant="outline" className={getStatusColor(order.status)}>
+                          <Badge variant="outline" className={`${getStatusColor(order.status)} font-medium`}>
                             {getStatusLabel(order.status)}
                           </Badge>
                           {isNew && (
-                            <Badge className="bg-primary text-primary-foreground text-xs">
+                            <Badge className="bg-primary text-primary-foreground text-xs animate-pulse">
                               Новый
                             </Badge>
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
                           {formatRelativeDate(order.created_at)}
                         </p>
                       </div>
                       
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 flex-shrink-0">
                         <div className="text-right">
-                          <p className="font-semibold">{formatPrice(order.total)}</p>
+                          <p className="font-bold text-lg">{formatPrice(order.total)}</p>
                           <p className="text-xs text-muted-foreground">
                             {order.items.length} {order.items.length === 1 ? 'товар' : order.items.length < 5 ? 'товара' : 'товаров'}
                           </p>
@@ -422,6 +417,7 @@ export default function Orders() {
                         <motion.div
                           animate={{ rotate: isExpanded ? 180 : 0 }}
                           transition={{ duration: 0.2 }}
+                          className="p-1 rounded-full bg-muted/50"
                         >
                           <ChevronDown className="h-5 w-5 text-muted-foreground" />
                         </motion.div>
@@ -490,41 +486,38 @@ export default function Orders() {
                         <Separator />
                         <CardContent className="p-4 space-y-5">
                           {order.status !== 'cancelled' && statusSteps.length > 0 && (
-                            <div className="bg-muted/50 rounded-lg p-4">
-                              <p className="text-sm font-medium mb-4">Статус заказа</p>
-                              <div className="relative overflow-x-auto pb-2 -mx-1 px-1">
-                                <div className="flex min-w-max sm:min-w-0">
+                            <div className="bg-gradient-to-br from-muted/60 to-muted/30 rounded-xl p-4 border border-border/50">
+                              <p className="text-sm font-medium mb-4 text-foreground/80">Статус заказа</p>
+                              <div className="relative">
+                                <div className="absolute top-4 left-0 right-0 h-0.5 bg-muted-foreground/20" />
+                                <div 
+                                  className="absolute top-4 left-0 h-0.5 bg-primary transition-all duration-500"
+                                  style={{ width: `${(statusIndex / (statusSteps.length - 1)) * 100}%` }}
+                                />
+                                <div className="flex justify-between relative">
                                   {statusSteps.map((step, index) => {
                                     const Icon = step.icon;
                                     const isCompleted = index <= statusIndex;
                                     const isCurrent = index === statusIndex;
-                                    const isLast = index === statusSteps.length - 1;
                                     
                                     return (
-                                      <div key={step.key} className="flex items-center">
-                                        <div className="flex flex-col items-center relative z-10">
-                                          <div
-                                            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all ${
-                                              isCompleted
-                                                ? 'bg-primary text-primary-foreground'
-                                                : 'bg-muted-foreground/20 text-muted-foreground'
-                                            } ${isCurrent ? 'ring-4 ring-primary/30 scale-110' : ''}`}
-                                          >
-                                            {isCompleted && index < statusIndex ? (
-                                              <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />
-                                            ) : (
-                                              <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
-                                            )}
-                                          </div>
-                                          <span className={`text-[10px] sm:text-xs mt-1.5 text-center leading-tight whitespace-nowrap max-w-[60px] sm:max-w-[80px] truncate ${isCompleted ? 'font-medium' : 'text-muted-foreground'}`}>
-                                            {step.label}
-                                          </span>
+                                      <div key={step.key} className="flex flex-col items-center flex-1">
+                                        <div
+                                          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
+                                            isCompleted
+                                              ? 'bg-primary text-primary-foreground shadow-md'
+                                              : 'bg-background border-2 border-muted-foreground/30 text-muted-foreground'
+                                          } ${isCurrent ? 'ring-4 ring-primary/20 scale-110' : ''}`}
+                                        >
+                                          {isCompleted && index < statusIndex ? (
+                                            <CheckCircle2 className="h-4 w-4" />
+                                          ) : (
+                                            <Icon className="h-4 w-4" />
+                                          )}
                                         </div>
-                                        {!isLast && (
-                                          <div className={`w-6 sm:w-8 h-0.5 mx-0.5 sm:mx-1 mt-[-18px] ${
-                                            index < statusIndex ? 'bg-primary' : 'bg-muted-foreground/20'
-                                          }`} />
-                                        )}
+                                        <span className={`text-[9px] sm:text-[10px] mt-2 text-center leading-tight max-w-[50px] sm:max-w-[60px] ${isCompleted ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
+                                          {step.label}
+                                        </span>
                                       </div>
                                     );
                                   })}
