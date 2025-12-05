@@ -80,7 +80,8 @@
     "paid": "Оплачен",
     "processing": "Собирается",
     "shipped": "В пути",
-    "delivered": "Доставлен"
+    "delivered": "Доставлен",
+    "cancelled": "Отменён"
   },
   "payment": {
     "click": {

@@ -44,6 +44,10 @@ const DEFAULT_STATUS_CONFIG: Record<string, { label: string; icon: any; color: s
   shipped: { label: 'В пути', icon: Truck, color: 'bg-purple-100 text-purple-800 border-purple-200' },
   delivered: { label: 'Доставлен', icon: PackageCheck, color: 'bg-green-100 text-green-800 border-green-200' },
   cancelled: { label: 'Отменён', icon: Ban, color: 'bg-red-100 text-red-800 border-red-200' },
+  completed: { label: 'Завершён', icon: CheckCircle2, color: 'bg-green-100 text-green-800 border-green-200' },
+  failed: { label: 'Ошибка', icon: Ban, color: 'bg-red-100 text-red-800 border-red-200' },
+  refunded: { label: 'Возврат', icon: Wallet, color: 'bg-orange-100 text-orange-800 border-orange-200' },
+  on_hold: { label: 'На удержании', icon: Clock, color: 'bg-gray-100 text-gray-800 border-gray-200' },
 };
 
 const STATUS_ORDER = ['reviewing', 'paid', 'processing', 'shipped', 'delivered'];
