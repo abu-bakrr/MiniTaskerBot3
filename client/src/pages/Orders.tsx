@@ -351,7 +351,7 @@ export default function Orders() {
             </div>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {filteredOrders.map((order) => {
               const isExpanded = expandedOrder === order.id;
               const statusIndex = getStatusIndex(order.status);
@@ -360,68 +360,19 @@ export default function Orders() {
               return (
                 <Card 
                   key={order.id} 
-                  className={`overflow-hidden transition-all duration-300 hover:shadow-lg border-border/60 ${isNew ? 'ring-2 ring-primary ring-offset-2' : ''} ${isExpanded ? 'shadow-md' : ''}`}
+                  className={`overflow-hidden transition-all duration-500 ease-out border-border/50 ${isNew ? 'ring-2 ring-primary ring-offset-2' : ''} ${isExpanded ? 'shadow-lg' : 'hover:shadow-md'}`}
                 >
                   <div
-                    className="p-4 cursor-pointer hover:bg-muted/30 transition-colors"
+                    className="p-3 cursor-pointer hover:bg-muted/20 transition-colors duration-200"
                     onClick={() => toggleOrder(order.id)}
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2 flex-wrap">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              copyOrderId(order.id);
-                            }}
-                            className="text-sm font-mono font-medium text-foreground/70 hover:text-foreground flex items-center gap-1.5 transition-colors bg-muted/50 px-2 py-0.5 rounded-md"
-                          >
-                            #{order.id}
-                            {copiedId === order.id ? (
-                              <Check className="h-3 w-3 text-green-500" />
-                            ) : (
-                              <Copy className="h-3 w-3 opacity-50" />
-                            )}
-                          </button>
-                          <Badge variant="outline" className={`${getStatusColor(order.status)} font-medium`}>
-                            {getStatusLabel(order.status)}
-                          </Badge>
-                          {isNew && (
-                            <Badge className="bg-primary text-primary-foreground text-xs animate-pulse">
-                              Новый
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {formatRelativeDate(order.created_at)}
-                        </p>
-                      </div>
-                      
-                      <div className="flex items-center gap-3 flex-shrink-0">
-                        <div className="text-right">
-                          <p className="font-bold text-lg">{formatPrice(order.total)}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {order.items.length} {order.items.length === 1 ? 'товар' : order.items.length < 5 ? 'товара' : 'товаров'}
-                          </p>
-                        </div>
-                        <motion.div
-                          animate={{ rotate: isExpanded ? 180 : 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="p-1 rounded-full bg-muted/50"
-                        >
-                          <ChevronDown className="h-5 w-5 text-muted-foreground" />
-                        </motion.div>
-                      </div>
-                    </div>
-
-                    {!isExpanded && (
-                      <div className="mt-3 space-y-3">
-                        <div className="flex gap-2 overflow-x-auto pb-1">
-                          {order.items.slice(0, 4).map((item, idx) => (
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="flex gap-1.5 overflow-hidden flex-shrink-0">
+                          {order.items.slice(0, 2).map((item, idx) => (
                             <div
                               key={idx}
-                              className="flex-shrink-0 w-12 h-12 rounded-md bg-muted overflow-hidden"
+                              className="w-10 h-10 rounded-lg bg-muted overflow-hidden flex-shrink-0"
                             >
                               {item.image_url ? (
                                 <img
@@ -431,82 +382,96 @@ export default function Orders() {
                                 />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">
-                                  <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                                  <ImageIcon className="h-4 w-4 text-muted-foreground" />
                                 </div>
                               )}
                             </div>
                           ))}
-                          {order.items.length > 4 && (
-                            <div className="flex-shrink-0 w-12 h-12 rounded-md bg-muted flex items-center justify-center">
-                              <span className="text-xs text-muted-foreground">+{order.items.length - 4}</span>
+                          {order.items.length > 2 && (
+                            <div className="w-10 h-10 rounded-lg bg-muted/70 flex items-center justify-center flex-shrink-0">
+                              <span className="text-[10px] font-medium text-muted-foreground">+{order.items.length - 2}</span>
                             </div>
                           )}
                         </div>
-                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                          {order.delivery_address && (
-                            <div className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              <span className="truncate max-w-[150px]">{order.delivery_address}</span>
-                            </div>
-                          )}
-                          {order.payment_method && (
-                            <div className="flex items-center gap-1">
-                              <CreditCard className="h-3 w-3" />
-                              <span>{getPaymentMethodLabel(order.payment_method)}</span>
-                            </div>
-                          )}
-                          {order.customer_phone && (
-                            <div className="flex items-center gap-1">
-                              <Phone className="h-3 w-3" />
-                              <span>{order.customer_phone}</span>
-                            </div>
-                          )}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Badge variant="outline" className={`${getStatusColor(order.status)} text-xs font-medium`}>
+                              {getStatusLabel(order.status)}
+                            </Badge>
+                            {isNew && (
+                              <Badge className="bg-primary text-primary-foreground text-[10px] animate-pulse">
+                                Новый
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {formatRelativeDate(order.created_at)}
+                          </p>
                         </div>
                       </div>
-                    )}
+                      
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="text-right">
+                          <p className="font-bold text-base">{formatPrice(order.total)}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {order.items.length} {order.items.length === 1 ? 'товар' : order.items.length < 5 ? 'товара' : 'товаров'}
+                          </p>
+                        </div>
+                        <motion.div
+                          animate={{ rotate: isExpanded ? 180 : 0 }}
+                          transition={{ duration: 0.3, ease: "easeInOut" }}
+                          className="p-1"
+                        >
+                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        </motion.div>
+                      </div>
+                    </div>
                   </div>
 
-                  <AnimatePresence>
+                  <AnimatePresence mode="wait">
                     {isExpanded && (
                       <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                        transition={{ 
+                          height: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] },
+                          opacity: { duration: 0.3, ease: "easeOut" }
+                        }}
                       >
                         <Separator />
-                        <CardContent className="p-4 space-y-5">
+                        <CardContent className="p-3 sm:p-4 space-y-4">
                           {order.status !== 'cancelled' && statusSteps.length > 0 && (
-                            <div className="bg-gradient-to-br from-muted/60 to-muted/30 rounded-xl p-3 sm:p-4 border border-border/50">
-                              <p className="text-xs sm:text-sm font-medium mb-3 sm:mb-4 text-foreground/80">Статус заказа</p>
-                              <div className="relative">
-                                <div className="absolute top-3 sm:top-4 left-[10%] right-[10%] h-0.5 bg-muted-foreground/20" />
+                            <div className="bg-muted/40 rounded-lg p-3 border border-border/30">
+                              <div className="relative pt-1">
+                                <div className="absolute top-4 left-[10%] right-[10%] h-[2px] bg-muted-foreground/15 rounded-full" />
                                 <div 
-                                  className="absolute top-3 sm:top-4 left-[10%] h-0.5 bg-primary transition-all duration-500"
+                                  className="absolute top-4 left-[10%] h-[2px] bg-primary rounded-full transition-all duration-700 ease-out"
                                   style={{ width: `${(statusIndex / (statusSteps.length - 1)) * 80}%` }}
                                 />
-                                <div className="flex justify-between relative px-0">
+                                <div className="flex justify-between relative">
                                   {statusSteps.map((step, index) => {
                                     const Icon = step.icon;
                                     const isCompleted = index <= statusIndex;
                                     const isCurrent = index === statusIndex;
                                     
                                     return (
-                                      <div key={step.key} className="flex flex-col items-center" style={{ width: '20%' }}>
+                                      <div key={step.key} className="flex flex-col items-center w-[18%]">
                                         <div
-                                          className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
+                                          className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 ${
                                             isCompleted
-                                              ? 'bg-primary text-primary-foreground shadow-md'
-                                              : 'bg-background border-2 border-muted-foreground/30 text-muted-foreground'
-                                          } ${isCurrent ? 'ring-2 sm:ring-4 ring-primary/20 scale-105 sm:scale-110' : ''}`}
+                                              ? 'bg-primary text-primary-foreground shadow-sm'
+                                              : 'bg-background border-2 border-muted-foreground/20 text-muted-foreground'
+                                          } ${isCurrent ? 'ring-2 ring-primary/30 scale-110' : ''}`}
                                         >
                                           {isCompleted && index < statusIndex ? (
-                                            <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                                            <CheckCircle2 className="h-3.5 w-3.5" />
                                           ) : (
-                                            <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
+                                            <Icon className="h-3.5 w-3.5" />
                                           )}
                                         </div>
-                                        <span className={`text-[8px] sm:text-[10px] mt-1.5 sm:mt-2 text-center leading-tight ${isCompleted ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
+                                        <span className={`text-[7px] sm:text-[9px] mt-1.5 text-center leading-tight whitespace-nowrap ${isCompleted ? 'font-semibold text-foreground' : 'text-muted-foreground/70'}`}>
                                           {step.label}
                                         </span>
                                       </div>
