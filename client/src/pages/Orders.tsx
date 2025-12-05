@@ -44,6 +44,8 @@ const DEFAULT_STATUS_CONFIG: Record<string, { label: string; icon: any; color: s
 
 const STATUS_ORDER = ['awaiting_payment', 'paid', 'processing', 'shipped', 'delivered'];
 
+const VALID_STATUSES = new Set(['awaiting_payment', 'paid', 'processing', 'shipped', 'delivered', 'cancelled']);
+
 const LEGACY_STATUS_MAP: Record<string, string> = {
   'new': 'awaiting_payment',
   'confirmed': 'awaiting_payment',
@@ -51,7 +53,9 @@ const LEGACY_STATUS_MAP: Record<string, string> = {
 };
 
 const normalizeStatus = (status: string): string => {
-  return LEGACY_STATUS_MAP[status] || status;
+  if (VALID_STATUSES.has(status)) return status;
+  if (LEGACY_STATUS_MAP[status]) return LEGACY_STATUS_MAP[status];
+  return 'awaiting_payment';
 };
 
 const getStatusSteps = (orderStatuses: Record<string, string>) => {
