@@ -176,8 +176,9 @@ export default function AdminOrders() {
   };
 
   const getStatusBadge = (status: string) => {
-    const statusConfig = orderStatuses.find(s => s.value === status);
-    const label = statusConfig?.label || status;
+    const normalized = normalizeStatus(status);
+    const statusConfig = orderStatuses.find(s => s.value === normalized);
+    const label = statusConfig?.label || normalized;
     
     const colors: Record<string, string> = {
       reviewing: 'bg-slate-100 text-slate-800',
@@ -190,7 +191,7 @@ export default function AdminOrders() {
     };
 
     return (
-      <Badge className={colors[status] || 'bg-gray-100 text-gray-800'}>
+      <Badge className={colors[normalized] || 'bg-gray-100 text-gray-800'}>
         {label}
       </Badge>
     );
