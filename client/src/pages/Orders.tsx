@@ -46,7 +46,7 @@ const DEFAULT_STATUS_CONFIG: Record<string, { label: string; icon: any; color: s
   cancelled: { label: 'Отменён', icon: Ban, color: 'bg-red-100 text-red-800 border-red-200' },
 };
 
-const STATUS_ORDER = ['reviewing', 'awaiting_payment', 'paid', 'processing', 'shipped', 'delivered'];
+const STATUS_ORDER = ['reviewing', 'paid', 'processing', 'shipped', 'delivered'];
 
 const getStatusSteps = (orderStatuses: Record<string, string>) => {
   return STATUS_ORDER.map(key => ({
