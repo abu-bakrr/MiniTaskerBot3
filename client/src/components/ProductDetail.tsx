@@ -1,8 +1,9 @@
 import { Heart, ShoppingCart, ArrowLeft, Check, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useConfig } from "@/hooks/useConfig";
+import { useCart, attributesMatch } from "@/hooks/useCart";
 
 interface Attribute {
   name: string;
@@ -34,13 +35,17 @@ export default function ProductDetail({
   colors,
   attributes,
   isFavorite = false,
-  isInCart = false,
+  isInCart: isInCartProp = false,
   onToggleFavorite,
   onAddToCart,
   onBack,
   onCartClick,
 }: ProductDetailProps) {
   const { formatPrice } = useConfig();
+  
+  // Get cart items - returns empty array for guests (when user is not authenticated)
+  const { cartItems } = useCart();
+  
   const [currentImage, setCurrentImage] = useState(0);
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
   const [selectedColor, setSelectedColor] = useState<string | undefined>();
@@ -49,6 +54,24 @@ export default function ProductDetail({
   const touchEndX = useRef(0);
   const touchStartY = useRef(0);
   const isSwiping = useRef(false);
+
+  // Check if current variant (product + color + attributes) is already in cart
+  // Falls back to parent's isInCartProp if no cart data available
+  const isVariantInCart = useMemo(() => {
+    // If no cart items available, fall back to parent prop
+    if (!cartItems || cartItems.length === 0) {
+      return isInCartProp;
+    }
+    
+    return cartItems.some(item => 
+      item.product_id === id &&
+      (item.selected_color || null) === (selectedColor || null) &&
+      attributesMatch(item.selected_attributes, Object.keys(selectedAttributes).length > 0 ? selectedAttributes : undefined)
+    );
+  }, [cartItems, id, selectedColor, selectedAttributes, isInCartProp]);
+
+  // Use variant-aware check
+  const isInCart = isVariantInCart;
 
   const nextImage = () => {
     setCurrentImage((prev) => (prev + 1) % images.length);

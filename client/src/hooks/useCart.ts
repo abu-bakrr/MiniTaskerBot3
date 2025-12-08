@@ -14,6 +14,16 @@ interface CartItem {
   selected_attributes?: Record<string, string>;
 }
 
+// Helper function to compare attributes - exported for use in other components
+export const attributesMatch = (a?: Record<string, string>, b?: Record<string, string>): boolean => {
+  if (!a && !b) return true;
+  if (!a || !b) return false;
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) return false;
+  return keysA.every(key => a[key] === b[key]);
+};
+
 export function useCart() {
   const { user } = useAuth();
   const userId = user?.id;
@@ -28,16 +38,6 @@ export function useCart() {
     },
     enabled: !!userId,
   });
-
-  // Helper function to compare attributes
-  const attributesMatch = (a?: Record<string, string>, b?: Record<string, string>): boolean => {
-    if (!a && !b) return true;
-    if (!a || !b) return false;
-    const keysA = Object.keys(a);
-    const keysB = Object.keys(b);
-    if (keysA.length !== keysB.length) return false;
-    return keysA.every(key => a[key] === b[key]);
-  };
 
   // Add to cart mutation with optimistic update
   const addToCart = useMutation({
