@@ -1187,24 +1187,35 @@ def add_to_cart():
         selected_color = data.get('selected_color')
         selected_attributes = data.get('selected_attributes')
         
+        import json as json_lib
+        
+        if selected_attributes and len(selected_attributes) == 0:
+            selected_attributes = None
+        
+        attrs_json = json_lib.dumps(selected_attributes) if selected_attributes else None
+        
         conn = get_db_connection()
         cur = conn.cursor()
         
-        # Check if exact same item (product + color + attributes) exists
-        import json as json_lib
-        cur.execute(
-            '''SELECT id, quantity FROM cart 
-               WHERE user_id = %s AND product_id = %s 
-               AND (selected_color = %s OR (selected_color IS NULL AND %s IS NULL))
-               AND (selected_attributes::text = %s OR (selected_attributes IS NULL AND %s IS NULL))''',
-            (user_id, product_id, selected_color, selected_color, 
-             json_lib.dumps(selected_attributes) if selected_attributes else None,
-             json_lib.dumps(selected_attributes) if selected_attributes else None)
-        )
+        if attrs_json:
+            cur.execute(
+                '''SELECT id, quantity FROM cart 
+                   WHERE user_id = %s AND product_id = %s 
+                   AND (selected_color = %s OR (selected_color IS NULL AND %s IS NULL))
+                   AND selected_attributes = %s::jsonb''',
+                (user_id, product_id, selected_color, selected_color, attrs_json)
+            )
+        else:
+            cur.execute(
+                '''SELECT id, quantity FROM cart 
+                   WHERE user_id = %s AND product_id = %s 
+                   AND (selected_color = %s OR (selected_color IS NULL AND %s IS NULL))
+                   AND selected_attributes IS NULL''',
+                (user_id, product_id, selected_color, selected_color)
+            )
         existing = cur.fetchone()
         
         if existing:
-            # Update quantity if same item exists
             new_quantity = existing['quantity'] + quantity
             cur.execute(
                 '''UPDATE cart SET quantity = %s 
@@ -1212,12 +1223,10 @@ def add_to_cart():
                 (new_quantity, existing['id'])
             )
         else:
-            # Insert new cart item
             cur.execute(
                 '''INSERT INTO cart (user_id, product_id, quantity, selected_color, selected_attributes) 
                    VALUES (%s, %s, %s, %s, %s) RETURNING *''',
-                (user_id, product_id, quantity, selected_color, 
-                 json_lib.dumps(selected_attributes) if selected_attributes else None)
+                (user_id, product_id, quantity, selected_color, attrs_json)
             )
         
         cart_item = cur.fetchone()
