@@ -427,24 +427,22 @@ export default function AdminSettings() {
                     <span className="ml-2 text-xs text-green-600">(установлен)</span>
                   )}
                 </Label>
-                <div className="relative flex">
+                <div className="relative">
                   <Input
                     id="bot_token"
                     type={showTelegramToken ? 'text' : 'password'}
                     value={telegramToken}
                     onChange={(e) => setTelegramToken(e.target.value)}
                     placeholder={telegram.has_bot_token ? '••••••••••••••••' : 'Bot Token от @BotFather'}
-                    className="pr-10 min-w-0 flex-1"
+                    className="pr-10"
                   />
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-0 top-0 h-full px-3 flex-shrink-0"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors"
                     onClick={() => setShowTelegramToken(!showTelegramToken)}
                   >
                     {showTelegramToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
+                  </button>
                 </div>
               </div>
               
@@ -537,24 +535,22 @@ export default function AdminSettings() {
                     <span className="ml-2 text-xs text-green-600">(установлен)</span>
                   )}
                 </Label>
-                <div className="relative flex">
+                <div className="relative">
                   <Input
                     id="smtp_password"
                     type={showSmtpPassword ? 'text' : 'password'}
                     value={smtpPassword}
                     onChange={(e) => setSmtpPassword(e.target.value)}
                     placeholder={smtp.has_password ? '••••••••••••••••' : 'Пароль приложения'}
-                    className="pr-10 min-w-0 flex-1"
+                    className="pr-10"
                   />
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-0 top-0 h-full px-3 flex-shrink-0"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors"
                     onClick={() => setShowSmtpPassword(!showSmtpPassword)}
                   >
                     {showSmtpPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
+                  </button>
                 </div>
               </div>
               
@@ -667,24 +663,22 @@ export default function AdminSettings() {
                     <span className="ml-2 text-xs text-green-600">(установлен)</span>
                   )}
                 </Label>
-                <div className="relative flex">
+                <div className="relative">
                   <Input
                     id="api_secret"
                     type={showCloudinarySecret ? 'text' : 'password'}
                     value={cloudinarySecret}
                     onChange={(e) => setCloudinarySecret(e.target.value)}
                     placeholder={cloudinary.has_api_secret ? '••••••••••••••••' : 'API Secret'}
-                    className="pr-10 min-w-0 flex-1"
+                    className="pr-10"
                   />
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-0 top-0 h-full px-3 flex-shrink-0"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors"
                     onClick={() => setShowCloudinarySecret(!showCloudinarySecret)}
                   >
                     {showCloudinarySecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
+                  </button>
                 </div>
               </div>
               
