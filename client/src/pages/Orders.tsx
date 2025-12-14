@@ -427,8 +427,7 @@ export default function Orders() {
                               )}
                               {/* Бейдж с количеством */}
                               <div 
-                                className="absolute -bottom-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-primary text-primary-foreground text-[10px] font-semibold flex items-center justify-center px-1 shadow-sm border-2 border-background"
-                                style={{ zIndex: 4 }}
+                                className="absolute bottom-0.5 right-0.5 min-w-[16px] h-[16px] rounded-full bg-primary text-primary-foreground text-[9px] font-semibold flex items-center justify-center px-1 shadow-sm"
                               >
                                 {order.items.length}
                               </div>

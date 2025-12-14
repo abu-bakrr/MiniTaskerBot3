@@ -175,7 +175,7 @@ export default function ProductDetail({
             
             {/* Hover-зоны для ПК - невидимые области для переключения фото */}
             {images.length > 1 && (
-              <div className="absolute inset-0 hidden md:flex z-[5]">
+              <div className="absolute inset-0 hidden md:flex z-[1]">
                 {images.map((_, idx) => (
                   <div
                     key={idx}
