@@ -35,6 +35,7 @@ function AppContent() {
   const [location, setLocation] = useLocation();
   const [selectedProductId, setSelectedProductId] = useState<string>('');
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
+  const [lastHomeUrl, setLastHomeUrl] = useState<string>('/');
   
   const { user, isLoading: isUserLoading } = useAuth();
 
@@ -98,6 +99,10 @@ function AppContent() {
   };
 
   const handleProductClick = (id: string) => {
+    // Save current URL with filters before navigating to product
+    if (location.startsWith('/') && !location.startsWith('/product')) {
+      setLastHomeUrl(window.location.pathname + window.location.search);
+    }
     setSelectedProductId(id);
     setLocation(`/product/${id}`);
   };
@@ -275,7 +280,7 @@ function AppContent() {
               return (
                 <Product
                   productId={productId}
-                  onBack={() => setLocation('/')}
+                  onBack={() => setLocation(lastHomeUrl)}
                   onAddToCart={handleAddToCart}
                   onToggleFavorite={handleToggleFavorite}
                   isFavorite={favoriteIds.includes(productId)}
