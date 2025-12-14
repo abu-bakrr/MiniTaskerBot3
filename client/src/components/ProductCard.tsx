@@ -117,6 +117,7 @@ export default function ProductCard({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onMouseLeave={() => setCurrentImage(0)}
       >
         <div className="relative w-full h-full">
           {images.map((img, idx) => (
@@ -145,6 +146,19 @@ export default function ProductCard({
             )
           ))}
         </div>
+        
+        {/* Hover-зоны для ПК - невидимые области для переключения фото */}
+        {images.length > 1 && (
+          <div className="absolute inset-0 hidden md:flex z-[5]">
+            {images.map((_, idx) => (
+              <div
+                key={idx}
+                className="flex-1 h-full cursor-pointer"
+                onMouseEnter={() => setCurrentImage(idx)}
+              />
+            ))}
+          </div>
+        )}
         <button
           onClick={handleFavoriteClick}
           onTouchStart={handleFavoriteTouchStart}
