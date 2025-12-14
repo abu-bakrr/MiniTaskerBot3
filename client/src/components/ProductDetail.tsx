@@ -173,6 +173,19 @@ export default function ProductDetail({
               ))}
             </div>
             
+            {/* Hover-зоны для ПК - невидимые области для переключения фото */}
+            {images.length > 1 && (
+              <div className="absolute inset-0 hidden md:flex z-[5]">
+                {images.map((_, idx) => (
+                  <div
+                    key={idx}
+                    className="flex-1 h-full cursor-pointer"
+                    onMouseEnter={() => setCurrentImage(idx)}
+                  />
+                ))}
+              </div>
+            )}
+            
             {/* Favorite Button */}
             <button
               onClick={handleFavorite}
