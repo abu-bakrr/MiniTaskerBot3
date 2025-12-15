@@ -244,14 +244,14 @@ export default function AdminInventory() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={handleExport} className="flex-1 sm:flex-none">
-            <Download className="h-4 w-4 mr-2" />
+            <Upload className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Экспорт</span>
             <span className="sm:hidden">CSV</span>
           </Button>
           <Label className="cursor-pointer flex-1 sm:flex-none">
             <Button variant="outline" size="sm" asChild className="w-full">
               <span>
-                <Upload className="h-4 w-4 mr-2" />
+                <Download className="h-4 w-4 mr-2" />
                 <span className="hidden sm:inline">Импорт</span>
                 <span className="sm:hidden">CSV</span>
               </span>
@@ -299,17 +299,6 @@ export default function AdminInventory() {
                   <div>
                     <Label className="mb-2 block">Цвет</Label>
                     <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, color: "" })}
-                        className={`px-3 py-2 text-sm rounded-md border transition-all ${
-                          formData.color === "" 
-                            ? "border-primary bg-primary/10 text-primary" 
-                            : "border-border hover:border-primary/50"
-                        }`}
-                      >
-                        Без цвета
-                      </button>
                       {selectedProduct.colors.map((c) => (
                         <button
                           key={c}
@@ -337,20 +326,6 @@ export default function AdminInventory() {
                   <div key={attr.name}>
                     <Label className="mb-2 block">{attr.name}</Label>
                     <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setFormData({ 
-                          ...formData, 
-                          [idx === 0 ? 'attribute1_value' : 'attribute2_value']: "" 
-                        })}
-                        className={`px-3 py-2 text-sm rounded-md border transition-all ${
-                          (idx === 0 ? formData.attribute1_value : formData.attribute2_value) === "" 
-                            ? "border-primary bg-primary/10 text-primary" 
-                            : "border-border hover:border-primary/50"
-                        }`}
-                      >
-                        Не выбрано
-                      </button>
                       {attr.values.map((v) => (
                         <button
                           key={v}

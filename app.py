@@ -1361,6 +1361,86 @@ def get_cart(user_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/cart/<user_id>/delivery-info', methods=['GET'])
+def get_cart_delivery_info(user_id):
+    """Get delivery information for cart items (backorder status and delivery days)"""
+    try:
+        import json as json_lib
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Get cart items with product info
+        cur.execute('''
+            SELECT c.product_id, c.selected_color, c.selected_attributes
+            FROM cart c
+            WHERE c.user_id = %s
+        ''', (user_id,))
+        cart_items = cur.fetchall()
+        
+        if not cart_items:
+            cur.close()
+            conn.close()
+            return jsonify({
+                'has_backorder': False,
+                'max_backorder_days': 0,
+                'default_delivery_days': int(get_platform_setting('default_delivery_days') or 3)
+            })
+        
+        has_backorder = False
+        max_backorder_days = 0
+        default_delivery_days = int(get_platform_setting('default_delivery_days') or 3)
+        
+        for item in cart_items:
+            selected_attrs = item.get('selected_attributes')
+            if isinstance(selected_attrs, str):
+                selected_attrs = json_lib.loads(selected_attrs) if selected_attrs else {}
+            elif selected_attrs is None:
+                selected_attrs = {}
+            
+            attr1_value = None
+            attr2_value = None
+            if selected_attrs:
+                attr_values = list(selected_attrs.values())
+                if len(attr_values) > 0:
+                    attr1_value = attr_values[0]
+                if len(attr_values) > 1:
+                    attr2_value = attr_values[1]
+            
+            # Check inventory for this combination
+            cur.execute('''
+                SELECT quantity, backorder_lead_time_days
+                FROM product_inventory
+                WHERE product_id = %s
+                AND (color = %s OR (color IS NULL AND %s IS NULL))
+                AND (attribute1_value = %s OR (attribute1_value IS NULL AND %s IS NULL))
+                AND (attribute2_value = %s OR (attribute2_value IS NULL AND %s IS NULL))
+            ''', (item['product_id'], item.get('selected_color'), item.get('selected_color'),
+                  attr1_value, attr1_value, attr2_value, attr2_value))
+            
+            inventory = cur.fetchone()
+            
+            if inventory:
+                if inventory['quantity'] <= 0:
+                    has_backorder = True
+                    backorder_days = inventory['backorder_lead_time_days'] or default_delivery_days
+                    max_backorder_days = max(max_backorder_days, backorder_days)
+            else:
+                # No inventory record - consider as backorder with default days
+                has_backorder = True
+                max_backorder_days = max(max_backorder_days, default_delivery_days)
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            'has_backorder': has_backorder,
+            'max_backorder_days': max_backorder_days if has_backorder else 0,
+            'default_delivery_days': default_delivery_days
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/cart', methods=['POST'])
 def add_to_cart():
     try:

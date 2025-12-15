@@ -188,6 +188,7 @@ export default function Cart({
         isOpen={isModalOpen}
         items={orderItems}
         total={total}
+        userId={user?.id}
         onClose={() => setIsModalOpen(false)}
         onPaymentSelect={handlePaymentSelect}
       />

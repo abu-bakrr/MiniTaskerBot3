@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useConfig } from "@/hooks/useConfig";
-import { X, MapPin, CreditCard, Loader2, Upload, CheckCircle, Copy, Image } from "lucide-react";
+import { X, MapPin, CreditCard, Loader2, Upload, CheckCircle, Copy, Image, Clock } from "lucide-react";
 
 interface OrderItem {
   id: string;
@@ -22,10 +22,17 @@ interface DeliveryInfo {
   customerPhone: string;
 }
 
+interface DeliveryEstimate {
+  has_backorder: boolean;
+  max_backorder_days: number;
+  default_delivery_days: number;
+}
+
 interface CheckoutModalProps {
   isOpen: boolean;
   items: OrderItem[];
   total: number;
+  userId?: string;
   onClose: () => void;
   onPaymentSelect: (paymentMethod: string, deliveryInfo: DeliveryInfo, receiptUrl?: string) => Promise<string | null>;
 }
@@ -40,6 +47,7 @@ export default function CheckoutModal({
   isOpen,
   items,
   total,
+  userId,
   onClose,
   onPaymentSelect,
 }: CheckoutModalProps) {
@@ -51,6 +59,7 @@ export default function CheckoutModal({
   const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [deliveryEstimate, setDeliveryEstimate] = useState<DeliveryEstimate | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -68,6 +77,16 @@ export default function CheckoutModal({
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
 
+  // Fetch delivery estimate when modal opens
+  useEffect(() => {
+    if (isOpen && userId) {
+      fetch(`/api/cart/${userId}/delivery-info`)
+        .then(res => res.json())
+        .then(data => setDeliveryEstimate(data))
+        .catch(err => console.error('Failed to fetch delivery info:', err));
+    }
+  }, [isOpen, userId]);
+
   useEffect(() => {
     if (!isOpen) {
       setStep('delivery');
@@ -76,6 +95,7 @@ export default function CheckoutModal({
       setOrderSuccess(false);
       setMapError(null);
       setMapLoaded(false);
+      setDeliveryEstimate(null);
       setDeliveryInfo({
         address: '',
         lat: null,
@@ -367,6 +387,25 @@ export default function CheckoutModal({
                 <div className="text-xs text-muted-foreground mt-1">
                   {config?.delivery?.freeDeliveryNote || 'Доставка оплачивается при получении'}
                 </div>
+                
+                {deliveryEstimate && (
+                  <div className="mt-3 pt-3 border-t border-border">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm">
+                        {deliveryEstimate.has_backorder ? (
+                          <span className="text-amber-600">
+                            Срок доставки: ~{deliveryEstimate.max_backorder_days} дн. (есть товары под заказ)
+                          </span>
+                        ) : (
+                          <span className="text-green-600">
+                            Срок доставки: ~{deliveryEstimate.default_delivery_days} дн.
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-3">
