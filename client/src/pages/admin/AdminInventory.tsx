@@ -252,12 +252,12 @@ export default function AdminInventory() {
                 {selectedProduct?.colors && selectedProduct.colors.length > 0 && (
                   <div>
                     <Label>Цвет</Label>
-                    <Select value={formData.color} onValueChange={(v) => setFormData({ ...formData, color: v })}>
+                    <Select value={formData.color || "__none__"} onValueChange={(v) => setFormData({ ...formData, color: v === "__none__" ? "" : v })}>
                       <SelectTrigger>
                         <SelectValue placeholder="Выберите цвет" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Без цвета</SelectItem>
+                        <SelectItem value="__none__">Без цвета</SelectItem>
                         {selectedProduct.colors.map((c) => (
                           <SelectItem key={c} value={c}>{c}</SelectItem>
                         ))}
@@ -270,17 +270,17 @@ export default function AdminInventory() {
                   <div key={attr.name}>
                     <Label>{attr.name}</Label>
                     <Select 
-                      value={idx === 0 ? formData.attribute1_value : formData.attribute2_value}
+                      value={(idx === 0 ? formData.attribute1_value : formData.attribute2_value) || "__none__"}
                       onValueChange={(v) => setFormData({ 
                         ...formData, 
-                        [idx === 0 ? 'attribute1_value' : 'attribute2_value']: v 
+                        [idx === 0 ? 'attribute1_value' : 'attribute2_value']: v === "__none__" ? "" : v 
                       })}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder={`Выберите ${attr.name}`} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Не выбрано</SelectItem>
+                        <SelectItem value="__none__">Не выбрано</SelectItem>
                         {attr.values.map((v) => (
                           <SelectItem key={v} value={v}>{v}</SelectItem>
                         ))}
@@ -321,12 +321,12 @@ export default function AdminInventory() {
 
       <div className="flex gap-4 items-center">
         <Label>Фильтр по товару:</Label>
-        <Select value={selectedProductId} onValueChange={setSelectedProductId}>
+        <Select value={selectedProductId || "__all__"} onValueChange={(v) => setSelectedProductId(v === "__all__" ? "" : v)}>
           <SelectTrigger className="w-64">
             <SelectValue placeholder="Все товары" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Все товары</SelectItem>
+            <SelectItem value="__all__">Все товары</SelectItem>
             {products.map((p) => (
               <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
             ))}
