@@ -113,7 +113,8 @@ export default function AdminSettings() {
   const [smtpPassword, setSmtpPassword] = useState('');
   const [showSmtpPassword, setShowSmtpPassword] = useState(false);
   
-  const [deliveryDays, setDeliveryDays] = useState<number>(3);
+  const [deliveryDaysInStock, setDeliveryDaysInStock] = useState<number>(3);
+  const [deliveryDaysBackorder, setDeliveryDaysBackorder] = useState<number>(14);
   
   const [saving, setSaving] = useState<string | null>(null);
   const [testing, setTesting] = useState<string | null>(null);
@@ -160,7 +161,8 @@ export default function AdminSettings() {
       }
       if (deliveryRes.ok) {
         const data = await deliveryRes.json();
-        setDeliveryDays(data.default_delivery_days || 3);
+        setDeliveryDaysInStock(data.delivery_days_in_stock || 3);
+        setDeliveryDaysBackorder(data.delivery_days_backorder || 14);
       }
     } catch (error) {
       console.error('Failed to load settings:', error);
@@ -390,7 +392,10 @@ export default function AdminSettings() {
       const response = await fetch('/api/admin/settings/delivery', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ default_delivery_days: deliveryDays })
+        body: JSON.stringify({ 
+          delivery_days_in_stock: deliveryDaysInStock,
+          delivery_days_backorder: deliveryDaysBackorder
+        })
       });
       
       if (response.ok) {
@@ -1164,25 +1169,44 @@ export default function AdminSettings() {
                 Настройки доставки
               </CardTitle>
               <CardDescription>
-                Срок доставки по умолчанию для заказов
+                Глобальные сроки доставки для всех товаров
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="delivery_days">Срок доставки по умолчанию (дней)</Label>
-                <Input
-                  id="delivery_days"
-                  type="number"
-                  min="1"
-                  max="90"
-                  value={deliveryDays}
-                  onChange={(e) => setDeliveryDays(parseInt(e.target.value) || 3)}
-                  placeholder="3"
-                  className="w-32"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Этот срок будет использоваться для товаров "Под заказ", если не указан индивидуальный срок
-                </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="delivery_days_in_stock">Срок доставки (товары в наличии)</Label>
+                  <Input
+                    id="delivery_days_in_stock"
+                    type="number"
+                    min="1"
+                    max="90"
+                    value={deliveryDaysInStock}
+                    onChange={(e) => setDeliveryDaysInStock(parseInt(e.target.value) || 3)}
+                    placeholder="3"
+                    className="w-full"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Для товаров, которые есть на складе
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="delivery_days_backorder">Срок доставки (товары под заказ)</Label>
+                  <Input
+                    id="delivery_days_backorder"
+                    type="number"
+                    min="1"
+                    max="90"
+                    value={deliveryDaysBackorder}
+                    onChange={(e) => setDeliveryDaysBackorder(parseInt(e.target.value) || 14)}
+                    placeholder="14"
+                    className="w-full"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Для товаров под заказ (нет на складе)
+                  </p>
+                </div>
               </div>
               
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">

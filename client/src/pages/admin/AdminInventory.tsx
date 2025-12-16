@@ -61,7 +61,6 @@ export default function AdminInventory() {
     attribute1_value: "",
     attribute2_value: "",
     quantity: 0,
-    backorder_lead_time_days: "",
   });
 
   const { data: products = [] } = useQuery<Product[]>({
@@ -94,7 +93,6 @@ export default function AdminInventory() {
           color: data.color || null,
           attribute1_value: data.attribute1_value || null,
           attribute2_value: data.attribute2_value || null,
-          backorder_lead_time_days: data.backorder_lead_time_days ? parseInt(data.backorder_lead_time_days) : null,
         }),
       });
       if (!res.ok) throw new Error("Failed to add inventory");
@@ -119,7 +117,6 @@ export default function AdminInventory() {
         credentials: "include",
         body: JSON.stringify({
           quantity: data.quantity,
-          backorder_lead_time_days: data.backorder_lead_time_days ? parseInt(data.backorder_lead_time_days as string) : null,
         }),
       });
       if (!res.ok) throw new Error("Failed to update inventory");
@@ -153,7 +150,6 @@ export default function AdminInventory() {
       attribute1_value: "",
       attribute2_value: "",
       quantity: 0,
-      backorder_lead_time_days: "",
     });
   };
 
@@ -357,17 +353,6 @@ export default function AdminInventory() {
                   />
                 </div>
                 
-                <div>
-                  <Label>Срок доставки "под заказ" (дней)</Label>
-                  <Input 
-                    type="number" 
-                    min="1"
-                    placeholder="Оставьте пустым если не применимо"
-                    value={formData.backorder_lead_time_days}
-                    onChange={(e) => setFormData({ ...formData, backorder_lead_time_days: e.target.value })}
-                  />
-                </div>
-                
                 <Button 
                   onClick={() => addMutation.mutate(formData)} 
                   disabled={!formData.product_id}
@@ -431,7 +416,6 @@ export default function AdminInventory() {
                   <TableHead>Товар</TableHead>
                   <TableHead>Комбинация</TableHead>
                   <TableHead>Количество</TableHead>
-                  <TableHead>Срок доставки (дней)</TableHead>
                   <TableHead className="w-24">Действия</TableHead>
                 </TableRow>
               </TableHeader>
@@ -479,21 +463,6 @@ export default function AdminInventory() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {editingItem?.id === item.id ? (
-                        <Input 
-                          type="number"
-                          className="w-24"
-                          value={editingItem.backorder_lead_time_days || ""}
-                          onChange={(e) => setEditingItem({ 
-                            ...editingItem, 
-                            backorder_lead_time_days: e.target.value ? parseInt(e.target.value) : null 
-                          })}
-                        />
-                      ) : (
-                        item.backorder_lead_time_days || "—"
-                      )}
-                    </TableCell>
-                    <TableCell>
                       <div className="flex gap-1">
                         {editingItem?.id === item.id ? (
                           <>
@@ -502,8 +471,7 @@ export default function AdminInventory() {
                               onClick={() => updateMutation.mutate({ 
                                 id: item.id, 
                                 data: { 
-                                  quantity: editingItem.quantity, 
-                                  backorder_lead_time_days: editingItem.backorder_lead_time_days?.toString() || "" 
+                                  quantity: editingItem.quantity
                                 } 
                               })}
                             >
@@ -578,24 +546,6 @@ export default function AdminInventory() {
                               </span>
                             )}
                           </div>
-                          {(item.backorder_lead_time_days || editingItem?.id === item.id) && (
-                            <div>
-                              <span className="text-xs text-muted-foreground">Дней: </span>
-                              {editingItem?.id === item.id ? (
-                                <Input 
-                                  type="number"
-                                  className="w-16 h-7 text-sm inline-block"
-                                  value={editingItem.backorder_lead_time_days || ""}
-                                  onChange={(e) => setEditingItem({ 
-                                    ...editingItem, 
-                                    backorder_lead_time_days: e.target.value ? parseInt(e.target.value) : null 
-                                  })}
-                                />
-                              ) : (
-                                <span className="font-medium">{item.backorder_lead_time_days || "—"}</span>
-                              )}
-                            </div>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -609,8 +559,7 @@ export default function AdminInventory() {
                           onClick={() => updateMutation.mutate({ 
                             id: item.id, 
                             data: { 
-                              quantity: editingItem.quantity, 
-                              backorder_lead_time_days: editingItem.backorder_lead_time_days?.toString() || "" 
+                              quantity: editingItem.quantity
                             } 
                           })}
                         >

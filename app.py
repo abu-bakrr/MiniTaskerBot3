@@ -1363,9 +1363,13 @@ def get_cart(user_id):
 
 @app.route('/api/cart/<user_id>/delivery-info', methods=['GET'])
 def get_cart_delivery_info(user_id):
-    """Get delivery information for cart items (backorder status and delivery days)"""
+    """Get delivery information for cart items using global delivery settings"""
     try:
         import json as json_lib
+        
+        # Get global delivery settings
+        delivery_days_in_stock = int(get_platform_setting('delivery_days_in_stock') or 3)
+        delivery_days_backorder = int(get_platform_setting('delivery_days_backorder') or 14)
         
         conn = get_db_connection()
         cur = conn.cursor()
@@ -1384,13 +1388,12 @@ def get_cart_delivery_info(user_id):
             return jsonify({
                 'has_backorder': False,
                 'max_backorder_days': 0,
-                'default_delivery_days': int(get_platform_setting('default_delivery_days') or 3)
+                'default_delivery_days': delivery_days_in_stock
             })
         
         has_backorder = False
-        max_backorder_days = 0
-        default_delivery_days = int(get_platform_setting('default_delivery_days') or 3)
         
+        # Check all cart items for backorder status
         for item in cart_items:
             selected_attrs = item.get('selected_attributes')
             if isinstance(selected_attrs, str):
@@ -1409,7 +1412,7 @@ def get_cart_delivery_info(user_id):
             
             # Check inventory for this combination
             cur.execute('''
-                SELECT quantity, backorder_lead_time_days
+                SELECT quantity
                 FROM product_inventory
                 WHERE product_id = %s
                 AND (color = %s OR (color IS NULL AND %s IS NULL))
@@ -1423,20 +1426,18 @@ def get_cart_delivery_info(user_id):
             if inventory:
                 if inventory['quantity'] <= 0:
                     has_backorder = True
-                    backorder_days = inventory['backorder_lead_time_days'] or default_delivery_days
-                    max_backorder_days = max(max_backorder_days, backorder_days)
             else:
-                # No inventory record - consider as backorder with default days
+                # No inventory record - consider as backorder
                 has_backorder = True
-                max_backorder_days = max(max_backorder_days, default_delivery_days)
         
         cur.close()
         conn.close()
         
+        # Return delivery estimate based on whether any items are on backorder
         return jsonify({
             'has_backorder': has_backorder,
-            'max_backorder_days': max_backorder_days if has_backorder else 0,
-            'default_delivery_days': default_delivery_days
+            'max_backorder_days': delivery_days_backorder if has_backorder else 0,
+            'default_delivery_days': delivery_days_in_stock
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -4126,10 +4127,12 @@ def admin_get_delivery_settings():
         if not admin_id:
             return jsonify({'error': 'Not authorized'}), 401
         
-        default_delivery_days = get_platform_setting('default_delivery_days')
+        delivery_days_in_stock = get_platform_setting('delivery_days_in_stock')
+        delivery_days_backorder = get_platform_setting('delivery_days_backorder')
         
         return jsonify({
-            'default_delivery_days': int(default_delivery_days) if default_delivery_days else 3
+            'delivery_days_in_stock': int(delivery_days_in_stock) if delivery_days_in_stock else 3,
+            'delivery_days_backorder': int(delivery_days_backorder) if delivery_days_backorder else 14
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -4142,9 +4145,11 @@ def admin_update_delivery_settings():
             return jsonify({'error': 'Not authorized'}), 401
         
         data = request.json
-        default_delivery_days = data.get('default_delivery_days', 3)
+        delivery_days_in_stock = data.get('delivery_days_in_stock', 3)
+        delivery_days_backorder = data.get('delivery_days_backorder', 14)
         
-        set_platform_setting('default_delivery_days', str(default_delivery_days), is_secret=False)
+        set_platform_setting('delivery_days_in_stock', str(delivery_days_in_stock), is_secret=False)
+        set_platform_setting('delivery_days_backorder', str(delivery_days_backorder), is_secret=False)
         
         return jsonify({'message': 'Настройки доставки сохранены'}), 200
     except Exception as e:
