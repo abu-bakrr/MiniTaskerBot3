@@ -214,82 +214,73 @@ export default function AdminOrders() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-4">
+    <div className="space-y-3">
+      <div className="flex flex-col gap-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Поиск по имени, телефону, email, адресу..."
+            placeholder="Поиск..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 h-10"
           />
         </div>
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <div className="flex gap-2 items-center">
-            <Label className="whitespace-nowrap">Статус:</Label>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Все" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Все</SelectItem>
-                {orderStatuses.map(status => (
-                  <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="text-sm text-muted-foreground">
-            Найдено: {filteredOrders.length} из {orders.length}
-          </div>
+        <div className="flex gap-2 items-center justify-between">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[140px] h-9">
+              <SelectValue placeholder="Все" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Все статусы</SelectItem>
+              {orderStatuses.map(status => (
+                <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <span className="text-xs text-muted-foreground">
+            {filteredOrders.length} из {orders.length}
+          </span>
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-2">
         {filteredOrders.map(order => (
-          <Card key={order.id}>
-            <CardContent className="p-4">
-              <div className="flex flex-col sm:flex-row gap-4 justify-between">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono text-sm">#{order.id.slice(0, 8)}</span>
-                    {getStatusBadge(order.status)}
-                    {order.has_backorder && (
-                      <Badge className="bg-orange-100 text-orange-800">
-                        <Clock className="h-3 w-3 mr-1" />
-                        Под заказ
-                      </Badge>
-                    )}
-                    {order.estimated_delivery_days && (
-                      <Badge variant="outline" className="text-blue-600 border-blue-300">
-                        <Clock className="h-3 w-3 mr-1" />
-                        {order.estimated_delivery_days} дн.
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    {formatDate(order.created_at)}
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    {order.customer_name || order.first_name || order.user_email || 'Неизвестно'}
-                  </div>
-                </div>
-                <div className="flex flex-col sm:items-end gap-2">
-                  <div className="text-xl font-bold">{formatPrice(order.total)}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {order.items?.length || 0} товар(ов)
-                  </div>
-                  <Button size="sm" variant="outline" onClick={() => setSelectedOrder(order)}>
-                    <Eye className="h-4 w-4 mr-2" />
-                    Подробнее
-                  </Button>
-                </div>
+          <div 
+            key={order.id}
+            onClick={() => setSelectedOrder(order)}
+            className="bg-card border border-border rounded-xl p-3 active:bg-muted/50 cursor-pointer transition-colors"
+          >
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="font-mono text-xs text-muted-foreground">#{order.id.slice(0, 6)}</span>
+                {getStatusBadge(order.status)}
+                {order.has_backorder && (
+                  <Badge className="bg-orange-100 text-orange-800 text-[10px] px-1.5 py-0">
+                    <Clock className="h-2.5 w-2.5 mr-0.5" />
+                    Заказ
+                  </Badge>
+                )}
               </div>
-            </CardContent>
-          </Card>
+              <span className="text-base font-bold whitespace-nowrap">{formatPrice(order.total)}</span>
+            </div>
+            
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1">
+                  <User className="h-3 w-3" />
+                  {(order.customer_name || order.first_name || 'Клиент').split(' ')[0]}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Package className="h-3 w-3" />
+                  {order.items?.length || 0}
+                </span>
+              </div>
+              <span className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                {new Date(order.created_at).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })}
+              </span>
+            </div>
+          </div>
         ))}
       </div>
 
@@ -300,78 +291,60 @@ export default function AdminOrders() {
       )}
 
       <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Заказ #{selectedOrder?.id.slice(0, 8)}</DialogTitle>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto p-4 sm:p-6">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="text-base">Заказ #{selectedOrder?.id.slice(0, 6)}</DialogTitle>
           </DialogHeader>
           
           {selectedOrder && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-muted-foreground">Статус</Label>
-                  <div className="mt-1 flex items-center gap-2 flex-wrap">
-                    {getStatusBadge(selectedOrder.status)}
-                    {selectedOrder.has_backorder && (
-                      <Badge className="bg-orange-100 text-orange-800">
-                        <Clock className="h-3 w-3 mr-1" />
-                        Под заказ
-                      </Badge>
-                    )}
-                  </div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {getStatusBadge(selectedOrder.status)}
+                  {selectedOrder.has_backorder && (
+                    <Badge className="bg-orange-100 text-orange-800 text-xs">
+                      <Clock className="h-3 w-3 mr-1" />
+                      Под заказ
+                    </Badge>
+                  )}
                 </div>
-                <div>
-                  <Label className="text-muted-foreground">Дата</Label>
-                  <p className="mt-1">{formatDate(selectedOrder.created_at)}</p>
-                </div>
+                <span className="text-xs text-muted-foreground">{formatDate(selectedOrder.created_at)}</span>
               </div>
 
               {selectedOrder.estimated_delivery_days && (
-                <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+                <div className="bg-blue-50 border border-blue-200 p-2.5 rounded-lg text-sm">
                   <div className="flex items-center gap-2 text-blue-800">
-                    <Clock className="h-4 w-4" />
-                    <span className="font-medium">Срок доставки:</span>
-                    <span>{selectedOrder.estimated_delivery_days} дней</span>
-                  </div>
-                </div>
-              )}
-              
-              {selectedOrder.has_backorder && selectedOrder.backorder_delivery_date && (
-                <div className="bg-orange-50 border border-orange-200 p-3 rounded-lg">
-                  <div className="flex items-center gap-2 text-orange-800">
-                    <Clock className="h-4 w-4" />
-                    <span className="font-medium">Ожидаемая дата доставки под заказ:</span>
-                    <span>{formatDate(selectedOrder.backorder_delivery_date).split(',')[0]}</span>
+                    <Clock className="h-3.5 w-3.5 shrink-0" />
+                    <span>Доставка: <strong>{selectedOrder.estimated_delivery_days} дн.</strong></span>
                   </div>
                 </div>
               )}
 
               <div className="space-y-2">
-                <Label className="text-muted-foreground">Изменить статус</Label>
+                <Label className="text-xs text-muted-foreground">Изменить статус</Label>
+                <Select 
+                  value={selectedOrder.status} 
+                  onValueChange={(value) => updateOrderStatus(selectedOrder.id, value)}
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {orderStatuses.map(status => (
+                      <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <div className="flex gap-2">
-                  <Select 
-                    value={selectedOrder.status} 
-                    onValueChange={(value) => updateOrderStatus(selectedOrder.id, value)}
-                  >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {orderStatuses.map(status => (
-                        <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex gap-2 mt-2">
                   <Input
-                    placeholder="Или свой статус"
+                    placeholder="Свой статус"
                     value={customStatus}
                     onChange={(e) => setCustomStatus(e.target.value)}
-                    className="min-w-0 flex-1"
+                    className="min-w-0 flex-1 h-9 text-sm"
                   />
                   <Button 
                     variant="outline"
+                    size="sm"
                     onClick={() => {
                       if (customStatus) {
                         updateOrderStatus(selectedOrder.id, customStatus);
@@ -379,43 +352,41 @@ export default function AdminOrders() {
                       }
                     }}
                     disabled={!customStatus}
-                    className="flex-shrink-0"
                   >
-                    Применить
+                    OK
                   </Button>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-muted-foreground">Информация о клиенте</Label>
-                <div className="bg-muted p-4 rounded-lg space-y-2">
+                <Label className="text-xs text-muted-foreground">Клиент</Label>
+                <div className="bg-muted/50 p-3 rounded-lg space-y-1.5 text-sm">
                   <div className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    {selectedOrder.customer_name || selectedOrder.first_name || 'Не указано'}
-                    {selectedOrder.last_name && ` ${selectedOrder.last_name}`}
+                    <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span className="truncate">{selectedOrder.customer_name || selectedOrder.first_name || 'Не указано'}{selectedOrder.last_name && ` ${selectedOrder.last_name}`}</span>
                   </div>
                   {selectedOrder.customer_phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4" />
+                    <a href={`tel:${selectedOrder.customer_phone}`} className="flex items-center gap-2 text-primary">
+                      <Phone className="h-3.5 w-3.5 shrink-0" />
                       {selectedOrder.customer_phone}
-                    </div>
+                    </a>
                   )}
                   {selectedOrder.user_email && (
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      {selectedOrder.user_email}
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <User className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{selectedOrder.user_email}</span>
                     </div>
                   )}
                   {selectedOrder.delivery_address && (
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      {selectedOrder.delivery_address}
+                    <div className="flex items-start gap-2">
+                      <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0 text-muted-foreground" />
+                      <span className="text-xs leading-relaxed">{selectedOrder.delivery_address}</span>
                     </div>
                   )}
                   {selectedOrder.payment_method && (
-                    <div className="flex items-center gap-2">
-                      <CreditCard className="h-4 w-4" />
-                      {getPaymentMethodLabel(selectedOrder.payment_method)}
+                    <div className="flex items-center gap-2 pt-1 border-t border-border mt-2">
+                      <CreditCard className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span>{getPaymentMethodLabel(selectedOrder.payment_method)}</span>
                     </div>
                   )}
                 </div>
@@ -423,39 +394,22 @@ export default function AdminOrders() {
 
               {selectedOrder.payment_receipt_url && (
                 <div className="space-y-2">
-                  <Label className="text-muted-foreground flex items-center gap-2">
-                    <Receipt className="h-4 w-4" />
-                    Чек оплаты (перевод на карту)
+                  <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Receipt className="h-3.5 w-3.5" />
+                    Чек оплаты
                   </Label>
-                  <div className="bg-muted p-4 rounded-lg">
-                    <div className="relative group cursor-pointer" onClick={() => openReceiptModal(selectedOrder.payment_receipt_url!)}>
-                      <img 
-                        src={selectedOrder.payment_receipt_url} 
-                        alt="Чек оплаты"
-                        className="w-full max-h-64 object-contain rounded-lg border"
-                      />
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                        <div className="text-white flex items-center gap-2">
-                          <ExternalLink className="h-5 w-5" />
-                          <span>Увеличить</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-2 flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => openReceiptModal(selectedOrder.payment_receipt_url!)}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        Просмотр
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => window.open(selectedOrder.payment_receipt_url, '_blank')}
-                      >
-                        <ExternalLink className="h-4 w-4 mr-1" />
+                  <div 
+                    className="relative cursor-pointer rounded-lg overflow-hidden border"
+                    onClick={() => openReceiptModal(selectedOrder.payment_receipt_url!)}
+                  >
+                    <img 
+                      src={selectedOrder.payment_receipt_url} 
+                      alt="Чек"
+                      className="w-full max-h-40 object-contain bg-muted"
+                    />
+                    <div className="absolute bottom-2 right-2">
+                      <Button size="sm" variant="secondary" className="h-7 text-xs">
+                        <ExternalLink className="h-3 w-3 mr-1" />
                         Открыть
                       </Button>
                     </div>
@@ -464,39 +418,29 @@ export default function AdminOrders() {
               )}
 
               <div className="space-y-2">
-                <Label className="text-muted-foreground">Товары</Label>
-                <div className="space-y-3">
+                <Label className="text-xs text-muted-foreground">Товары ({selectedOrder.items?.length || 0})</Label>
+                <div className="space-y-2">
                   {selectedOrder.items?.map((item, idx) => (
-                    <div key={idx} className="flex gap-4 p-3 bg-muted rounded-lg">
+                    <div key={idx} className="flex gap-2.5 p-2 bg-muted/50 rounded-lg">
                       {item.product_images && item.product_images[0] ? (
                         <img 
                           src={item.product_images[0]} 
                           alt={item.name}
-                          className="w-16 h-16 object-cover rounded"
+                          className="w-12 h-12 object-cover rounded-lg shrink-0"
                         />
                       ) : (
-                        <div className="w-16 h-16 bg-background rounded flex items-center justify-center">
-                          <Package className="h-6 w-6 text-muted-foreground" />
+                        <div className="w-12 h-12 bg-background rounded-lg flex items-center justify-center shrink-0">
+                          <Package className="h-5 w-5 text-muted-foreground" />
                         </div>
                       )}
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h4 className="font-medium">{item.name}</h4>
-                          {item.availability_status === 'backorder' && (
-                            <Badge variant="outline" className="text-orange-600 border-orange-300 text-xs">
-                              <Clock className="h-3 w-3 mr-1" />
-                              {item.backorder_lead_time_days ? `~${item.backorder_lead_time_days} дн.` : 'Под заказ'}
-                            </Badge>
-                          )}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-medium truncate">{item.name}</h4>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>{formatPrice(item.price)} × {item.quantity}</span>
+                          {item.selected_color && <span>• {item.selected_color}</span>}
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          {formatPrice(item.price)} x {item.quantity}
-                        </p>
-                        {item.selected_color && (
-                          <p className="text-sm">Цвет: {item.selected_color}</p>
-                        )}
                       </div>
-                      <div className="font-bold">
+                      <div className="text-sm font-semibold shrink-0">
                         {formatPrice(item.price * item.quantity)}
                       </div>
                     </div>
@@ -504,9 +448,9 @@ export default function AdminOrders() {
                 </div>
               </div>
 
-              <div className="flex justify-between items-center pt-4 border-t">
-                <span className="text-lg font-medium">Итого:</span>
-                <span className="text-2xl font-bold">{formatPrice(selectedOrder.total)}</span>
+              <div className="flex justify-between items-center pt-3 border-t">
+                <span className="text-sm font-medium">Итого:</span>
+                <span className="text-lg font-bold">{formatPrice(selectedOrder.total)}</span>
               </div>
             </div>
           )}
