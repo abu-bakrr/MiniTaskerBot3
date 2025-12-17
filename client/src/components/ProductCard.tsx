@@ -122,13 +122,13 @@ export default function ProductCard({
       data-testid={`card-product-${id}`}
     >
       <div
-        className="relative aspect-[4/5] bg-muted"
+        className="relative aspect-square bg-muted"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onMouseLeave={() => setCurrentImage(0)}
       >
-        <div className="relative w-full h-full">
+        <div className="relative w-full h-full flex items-center justify-center">
           {images.map((img, idx) => (
             imageErrors.has(idx) ? (
               <div
@@ -144,7 +144,7 @@ export default function ProductCard({
                 key={idx}
                 src={img}
                 alt={name}
-                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+                className={`absolute inset-0 w-full h-full object-contain p-1 transition-opacity duration-300 ${
                   idx === currentImage ? "opacity-100" : "opacity-0"
                 }`}
                 loading="lazy"
@@ -206,9 +206,9 @@ export default function ProductCard({
           {name}
         </h3>
         
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-1">
           <p 
-            className="text-base text-foreground truncate" 
+            className="text-sm text-foreground" 
             style={{ 
               fontFamily: 'var(--font-family-custom, Inter)',
               fontWeight: 'var(--font-weight-price, 600)'
@@ -221,7 +221,7 @@ export default function ProductCard({
             size="icon"
             variant={isInCart ? "default" : "outline"}
             onClick={handleCartClick}
-            className="h-9 w-9 rounded-xl shrink-0 shadow-sm"
+            className="h-8 w-8 rounded-lg shrink-0"
             data-testid={`button-add-to-cart-${id}`}
           >
             {isInCart ? (
