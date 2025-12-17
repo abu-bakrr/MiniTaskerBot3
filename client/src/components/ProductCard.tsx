@@ -1,4 +1,4 @@
-import { Heart, ShoppingCart, Check, Image as ImageIcon, Package, Clock } from "lucide-react";
+import { Heart, ShoppingCart, Check, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useRef } from "react";
 import { useConfig } from "@/hooks/useConfig";
@@ -205,20 +205,6 @@ export default function ProductCard({
         >
           {name}
         </h3>
-        
-        <div className="mb-1">
-          {availability && availability.in_stock && availability.total_quantity > 0 ? (
-            <span className="inline-flex items-center gap-1 text-[10px] text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">
-              <Package className="w-2.5 h-2.5" />
-              <span>В наличии</span>
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 text-[10px] text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full">
-              <Clock className="w-2.5 h-2.5" />
-              <span>Под заказ</span>
-            </span>
-          )}
-        </div>
         
         <div className="flex items-center justify-between">
           <p 
