@@ -144,7 +144,7 @@ export default function ProductCard({
                 key={idx}
                 src={img}
                 alt={name}
-                className={`absolute inset-0 w-full h-full object-contain p-2 transition-opacity duration-300 ${
+                className={`absolute inset-0 w-full h-full object-cover rounded-2xl transition-opacity duration-300 ${
                   idx === currentImage ? "opacity-100" : "opacity-0"
                 }`}
                 loading="lazy"
