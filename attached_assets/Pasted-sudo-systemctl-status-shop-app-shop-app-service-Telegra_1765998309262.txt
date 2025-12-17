@@ -1,0 +1,374 @@
+sudo systemctl status shop-app
+● shop-app.service - Telegram Shop Flask Application
+     Loaded: loaded (/etc/systemd/system/shop-app.service; enabled; vendor preset: enabled)
+     Active: active (running) since Wed 2025-12-17 19:01:58 UTC; 1min 32s ago
+   Main PID: 404799 (gunicorn)
+      Tasks: 5 (limit: 1012)
+     Memory: 137.5M
+        CPU: 2.420s
+     CGroup: /system.slice/shop-app.service
+             ├─404799 /home/shopapp/app/venv/bin/python3 /home/shopapp/app/venv/bin/gunicorn app:app --bind 127.0.0.1:5>
+             ├─404801 /home/shopapp/app/venv/bin/python3 /home/shopapp/app/venv/bin/gunicorn app:app --bind 127.0.0.1:5>
+             ├─404802 /home/shopapp/app/venv/bin/python3 /home/shopapp/app/venv/bin/gunicorn app:app --bind 127.0.0.1:5>
+             ├─404803 /home/shopapp/app/venv/bin/python3 /home/shopapp/app/venv/bin/gunicorn app:app --bind 127.0.0.1:5>
+             └─404804 /home/shopapp/app/venv/bin/python3 /home/shopapp/app/venv/bin/gunicorn app:app --bind 127.0.0.1:5>
+
+Dec 17 19:01:58 12308 systemd[1]: Stopped Telegram Shop Flask Application.
+Dec 17 19:01:58 12308 systemd[1]: shop-app.service: Consumed 2.596s CPU time.
+Dec 17 19:01:58 12308 systemd[1]: Started Telegram Shop Flask Application.
+Dec 17 19:01:58 12308 gunicorn[404799]: [2025-12-17 19:01:58 +0000] [404799] [INFO] Starting gunicorn 23.0.0
+Dec 17 19:01:58 12308 gunicorn[404799]: [2025-12-17 19:01:58 +0000] [404799] [INFO] Listening at: http://127.0.0.1:5000>
+Dec 17 19:01:58 12308 gunicorn[404799]: [2025-12-17 19:01:58 +0000] [404799] [INFO] Using worker: sync
+Dec 17 19:01:58 12308 gunicorn[404801]: [2025-12-17 19:01:58 +0000] [404801] [INFO] Booting worker with pid: 404801
+Dec 17 19:01:58 12308 gunicorn[404802]: [2025-12-17 19:01:58 +0000] [404802] [INFO] Booting worker with pid: 404802
+Dec 17 19:01:58 12308 gunicorn[404804]: [2025-12-17 19:01:58 +0000] [404804] [INFO] Booting worker with pid: 404804
+Dec 17 19:01:58 12308 gunicorn[404803]: [2025-12-17 19:01:58 +0000] [404803] [INFO] Booting worker with pid: 404803
+ ^X
+root@12308:/home/shopapp/app# sudo journalctl -u shop-app -n 100 --no-pager
+Dec 17 18:52:21 12308 gunicorn[403080]:     self.emit(record)
+Dec 17 18:52:21 12308 gunicorn[403080]:   File "/usr/lib/python3.10/logging/__init__.py", line 1108, in emit
+Dec 17 18:52:21 12308 gunicorn[403080]:     self.handleError(record)
+Dec 17 18:52:21 12308 gunicorn[403080]:   File "/usr/lib/python3.10/logging/__init__.py", line 1021, in handleError
+Dec 17 18:52:21 12308 gunicorn[403080]:     sys.stderr.write('--- Logging error ---\n')
+Dec 17 18:52:21 12308 gunicorn[403080]: RuntimeError: reentrant call inside <_io.BufferedWriter name='<stderr>'>
+Dec 17 18:52:21 12308 gunicorn[403080]: Call stack:
+Dec 17 18:52:21 12308 gunicorn[403080]:   File "/home/shopapp/app/venv/bin/gunicorn", line 7, in <module>
+Dec 17 18:52:21 12308 gunicorn[403080]:     sys.exit(run())
+Dec 17 18:52:21 12308 gunicorn[403080]:   File "/home/shopapp/app/venv/lib/python3.10/site-packages/gunicorn/app/wsgiapp.py", line 66, in run
+Dec 17 18:52:21 12308 gunicorn[403080]:     WSGIApplication("%(prog)s [OPTIONS] [APP_MODULE]", prog=prog).run()
+Dec 17 18:52:21 12308 gunicorn[403080]:   File "/home/shopapp/app/venv/lib/python3.10/site-packages/gunicorn/app/base.py", line 235, in run
+Dec 17 18:52:21 12308 gunicorn[403080]:     super().run()
+Dec 17 18:52:21 12308 gunicorn[403080]:   File "/home/shopapp/app/venv/lib/python3.10/site-packages/gunicorn/app/base.py", line 71, in run
+Dec 17 18:52:21 12308 gunicorn[403080]:     Arbiter(self).run()
+Dec 17 18:52:21 12308 gunicorn[403080]:   File "/home/shopapp/app/venv/lib/python3.10/site-packages/gunicorn/arbiter.py", line 226, in run
+Dec 17 18:52:21 12308 gunicorn[403080]:     self.halt()
+Dec 17 18:52:21 12308 gunicorn[403080]:   File "/home/shopapp/app/venv/lib/python3.10/site-packages/gunicorn/arbiter.py", line 341, in halt
+Dec 17 18:52:21 12308 gunicorn[403080]:     self.stop()
+Dec 17 18:52:21 12308 gunicorn[403080]:   File "/home/shopapp/app/venv/lib/python3.10/site-packages/gunicorn/arbiter.py", line 395, in stop
+Dec 17 18:52:21 12308 gunicorn[403080]:     time.sleep(0.1)
+Dec 17 18:52:21 12308 gunicorn[403080]:   File "/home/shopapp/app/venv/lib/python3.10/site-packages/gunicorn/arbiter.py", line 241, in handle_chld
+Dec 17 18:52:21 12308 gunicorn[403080]:     self.reap_workers()
+Dec 17 18:52:21 12308 gunicorn[403080]:   File "/home/shopapp/app/venv/lib/python3.10/site-packages/gunicorn/arbiter.py", line 553, in reap_workers
+Dec 17 18:52:21 12308 gunicorn[403080]:     self.log.error(msg)
+Dec 17 18:52:21 12308 gunicorn[403080]:   File "/home/shopapp/app/venv/lib/python3.10/site-packages/gunicorn/glogging.py", line 271, in error
+Dec 17 18:52:21 12308 gunicorn[403080]:     self.error_log.error(msg, *args, **kwargs)
+Dec 17 18:52:21 12308 gunicorn[403080]: Message: 'Worker (pid:403084) was sent SIGTERM!'
+Dec 17 18:52:21 12308 gunicorn[403080]: Arguments: ()
+Dec 17 18:52:51 12308 gunicorn[403080]: [2025-12-17 18:52:51 +0000] [403080] [INFO] Shutting down: Master
+Dec 17 18:52:51 12308 systemd[1]: shop-app.service: Deactivated successfully.
+Dec 17 18:52:51 12308 systemd[1]: Stopped Telegram Shop Flask Application.
+Dec 17 18:52:51 12308 systemd[1]: shop-app.service: Consumed 3.652s CPU time.
+Dec 17 18:52:51 12308 systemd[1]: Started Telegram Shop Flask Application.
+Dec 17 18:52:51 12308 gunicorn[404107]: [2025-12-17 18:52:51 +0000] [404107] [INFO] Starting gunicorn 23.0.0
+Dec 17 18:52:51 12308 gunicorn[404107]: [2025-12-17 18:52:51 +0000] [404107] [INFO] Listening at: http://127.0.0.1:5000 (404107)
+Dec 17 18:52:51 12308 gunicorn[404107]: [2025-12-17 18:52:51 +0000] [404107] [INFO] Using worker: sync
+Dec 17 18:52:51 12308 gunicorn[404109]: [2025-12-17 18:52:51 +0000] [404109] [INFO] Booting worker with pid: 404109
+Dec 17 18:52:51 12308 gunicorn[404110]: [2025-12-17 18:52:51 +0000] [404110] [INFO] Booting worker with pid: 404110
+Dec 17 18:52:51 12308 gunicorn[404111]: [2025-12-17 18:52:51 +0000] [404111] [INFO] Booting worker with pid: 404111
+Dec 17 18:52:52 12308 gunicorn[404112]: [2025-12-17 18:52:52 +0000] [404112] [INFO] Booting worker with pid: 404112
+Dec 17 18:58:20 12308 gunicorn[404107]: [2025-12-17 18:58:20 +0000] [404107] [INFO] Handling signal: term
+Dec 17 18:58:20 12308 gunicorn[404110]: [2025-12-17 18:58:20 +0000] [404110] [INFO] Worker exiting (pid: 404110)
+Dec 17 18:58:20 12308 gunicorn[404110]: Database connection mode: DATABASE_URL
+Dec 17 18:58:20 12308 gunicorn[404110]: Database tables initialized successfully
+Dec 17 18:58:20 12308 systemd[1]: Stopping Telegram Shop Flask Application...
+Dec 17 18:58:20 12308 gunicorn[404111]: [2025-12-17 18:58:20 +0000] [404111] [INFO] Worker exiting (pid: 404111)
+Dec 17 18:58:20 12308 gunicorn[404111]: Database connection mode: DATABASE_URL
+Dec 17 18:58:20 12308 gunicorn[404111]: Database tables initialized successfully
+Dec 17 18:58:20 12308 gunicorn[404112]: [2025-12-17 18:58:20 +0000] [404112] [INFO] Worker exiting (pid: 404112)
+Dec 17 18:58:20 12308 gunicorn[404112]: Database connection mode: DATABASE_URL
+Dec 17 18:58:20 12308 gunicorn[404112]: Database tables initialized successfully
+Dec 17 18:58:20 12308 gunicorn[404109]: [2025-12-17 18:58:20 +0000] [404109] [INFO] Worker exiting (pid: 404109)
+Dec 17 18:58:20 12308 gunicorn[404109]: Database connection mode: DATABASE_URL
+Dec 17 18:58:20 12308 gunicorn[404109]: Database tables initialized successfully
+Dec 17 18:58:20 12308 gunicorn[404107]: [2025-12-17 18:58:20 +0000] [404107] [ERROR] Worker (pid:404111) was sent SIGTERM!
+Dec 17 18:58:20 12308 gunicorn[404107]: [2025-12-17 18:58:20 +0000] [404107] [ERROR] Worker (pid:404112) was sent SIGTERM!
+Dec 17 18:58:20 12308 gunicorn[404107]: [2025-12-17 18:58:20 +0000] [404107] [ERROR] Worker (pid:404110) was sent SIGTERM!
+Dec 17 18:58:20 12308 gunicorn[404107]: [2025-12-17 18:58:20 +0000] [404107] [INFO] Shutting down: Master
+Dec 17 18:58:21 12308 systemd[1]: shop-app.service: Deactivated successfully.
+Dec 17 18:58:21 12308 systemd[1]: Stopped Telegram Shop Flask Application.
+Dec 17 18:58:21 12308 systemd[1]: shop-app.service: Consumed 1.820s CPU time.
+Dec 17 18:58:21 12308 systemd[1]: Started Telegram Shop Flask Application.
+Dec 17 18:58:21 12308 gunicorn[404427]: [2025-12-17 18:58:21 +0000] [404427] [INFO] Starting gunicorn 23.0.0
+Dec 17 18:58:21 12308 gunicorn[404427]: [2025-12-17 18:58:21 +0000] [404427] [INFO] Listening at: http://127.0.0.1:5000 (404427)
+Dec 17 18:58:21 12308 gunicorn[404427]: [2025-12-17 18:58:21 +0000] [404427] [INFO] Using worker: sync
+Dec 17 18:58:21 12308 gunicorn[404430]: [2025-12-17 18:58:21 +0000] [404430] [INFO] Booting worker with pid: 404430
+Dec 17 18:58:21 12308 gunicorn[404431]: [2025-12-17 18:58:21 +0000] [404431] [INFO] Booting worker with pid: 404431
+Dec 17 18:58:21 12308 gunicorn[404432]: [2025-12-17 18:58:21 +0000] [404432] [INFO] Booting worker with pid: 404432
+Dec 17 18:58:21 12308 gunicorn[404433]: [2025-12-17 18:58:21 +0000] [404433] [INFO] Booting worker with pid: 404433
+Dec 17 19:01:58 12308 gunicorn[404427]: [2025-12-17 19:01:58 +0000] [404427] [INFO] Handling signal: term
+Dec 17 19:01:58 12308 systemd[1]: Stopping Telegram Shop Flask Application...
+Dec 17 19:01:58 12308 gunicorn[404430]: [2025-12-17 19:01:58 +0000] [404430] [INFO] Worker exiting (pid: 404430)
+Dec 17 19:01:58 12308 gunicorn[404430]: Database connection mode: DATABASE_URL
+Dec 17 19:01:58 12308 gunicorn[404430]: Database tables initialized successfully
+Dec 17 19:01:58 12308 gunicorn[404432]: [2025-12-17 19:01:58 +0000] [404432] [INFO] Worker exiting (pid: 404432)
+Dec 17 19:01:58 12308 gunicorn[404432]: Database connection mode: DATABASE_URL
+Dec 17 19:01:58 12308 gunicorn[404432]: Database tables initialized successfully
+Dec 17 19:01:58 12308 gunicorn[404433]: [2025-12-17 19:01:58 +0000] [404433] [INFO] Worker exiting (pid: 404433)
+Dec 17 19:01:58 12308 gunicorn[404433]: Database connection mode: DATABASE_URL
+Dec 17 19:01:58 12308 gunicorn[404433]: Database tables initialized successfully
+Dec 17 19:01:58 12308 gunicorn[404431]: [2025-12-17 19:01:58 +0000] [404431] [INFO] Worker exiting (pid: 404431)
+Dec 17 19:01:58 12308 gunicorn[404431]: Database connection mode: DATABASE_URL
+Dec 17 19:01:58 12308 gunicorn[404431]: Database tables initialized successfully
+Dec 17 19:01:58 12308 gunicorn[404427]: [2025-12-17 19:01:58 +0000] [404427] [ERROR] Worker (pid:404430) was sent SIGTERM!
+Dec 17 19:01:58 12308 gunicorn[404427]: [2025-12-17 19:01:58 +0000] [404427] [ERROR] Worker (pid:404433) was sent SIGTERM!
+Dec 17 19:01:58 12308 gunicorn[404427]: [2025-12-17 19:01:58 +0000] [404427] [ERROR] Worker (pid:404431) was sent SIGTERM!
+Dec 17 19:01:58 12308 gunicorn[404427]: [2025-12-17 19:01:58 +0000] [404427] [ERROR] Worker (pid:404432) was sent SIGTERM!
+Dec 17 19:01:58 12308 gunicorn[404427]: [2025-12-17 19:01:58 +0000] [404427] [INFO] Shutting down: Master
+Dec 17 19:01:58 12308 systemd[1]: shop-app.service: Deactivated successfully.
+Dec 17 19:01:58 12308 systemd[1]: Stopped Telegram Shop Flask Application.
+Dec 17 19:01:58 12308 systemd[1]: shop-app.service: Consumed 2.596s CPU time.
+Dec 17 19:01:58 12308 systemd[1]: Started Telegram Shop Flask Application.
+Dec 17 19:01:58 12308 gunicorn[404799]: [2025-12-17 19:01:58 +0000] [404799] [INFO] Starting gunicorn 23.0.0
+Dec 17 19:01:58 12308 gunicorn[404799]: [2025-12-17 19:01:58 +0000] [404799] [INFO] Listening at: http://127.0.0.1:5000 (404799)
+Dec 17 19:01:58 12308 gunicorn[404799]: [2025-12-17 19:01:58 +0000] [404799] [INFO] Using worker: sync
+Dec 17 19:01:58 12308 gunicorn[404801]: [2025-12-17 19:01:58 +0000] [404801] [INFO] Booting worker with pid: 404801
+Dec 17 19:01:58 12308 gunicorn[404802]: [2025-12-17 19:01:58 +0000] [404802] [INFO] Booting worker with pid: 404802
+Dec 17 19:01:58 12308 gunicorn[404804]: [2025-12-17 19:01:58 +0000] [404804] [INFO] Booting worker with pid: 404804
+Dec 17 19:01:58 12308 gunicorn[404803]: [2025-12-17 19:01:58 +0000] [404803] [INFO] Booting worker with pid: 404803
+root@12308:/home/shopapp/app# curl -v http://127.0.0.1:5000/sitemap.xml
+*   Trying 127.0.0.1:5000...
+* Connected to 127.0.0.1 (127.0.0.1) port 5000 (#0)
+> GET /sitemap.xml HTTP/1.1
+> Host: 127.0.0.1:5000
+> User-Agent: curl/7.81.0
+> Accept: */*
+>
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 200 OK
+< Server: gunicorn
+< Date: Wed, 17 Dec 2025 19:03:45 GMT
+< Connection: close
+< Content-Type: application/xml; charset=utf-8
+< Content-Length: 2907
+< Cache-Control: public, max-age=3600
+<
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>http://127.0.0.1:5000/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>http://127.0.0.1:5000/product/3fc54ee0-c3ac-4325-8272-9c86574e2392</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>http://127.0.0.1:5000/product/4bbb45e0-0449-455b-9826-0ddc1888c11f</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>http://127.0.0.1:5000/product/ae3cf195-ef57-45d2-9a8d-ebfb150a8b12</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>http://127.0.0.1:5000/product/7f49585b-baf0-4917-a043-961856ca3c0c</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>http://127.0.0.1:5000/product/ddb15295-08b9-4b6e-ac0c-f7f5177a8832</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>http://127.0.0.1:5000/product/d2885a42-420d-48de-bc20-2f5fc191cacc</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>http://127.0.0.1:5000/product/1ef5428c-3ecb-4020-a022-b8762bc763e3</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>http://127.0.0.1:5000/product/6dc148c6-d9b8-4b52-b461-aced49467b11</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>http://127.0.0.1:5000/product/fbcd5ac8-e865-414c-a699-d01ca2fc87ec</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>http://127.0.0.1:5000/product/a56728ca-d873-4e66-8901-8527bd6dd21c</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>http://127.0.0.1:5000/product/7d289f82-fb6d-44f0-bd08-007a072a8101</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>http://127.0.0.1:5000/product/43167c7d-e11f-435f-ae8f-b3224a284a4b</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>http://127.0.0.1:5000/product/67e60742-adeb-41cc-ab0e-f532546195d5</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>http://127.0.0.1:5000/product/7b4bc797-e90c-4ece-95d9-37b74278511b</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>http://127.0.0.1:5000/product/a45d5033-4760-4f8b-abcd-3e1ac854b2b6</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>http://127.0.0.1:5000/product/40669ad5-3eef-4eca-a5d3-4dcb0cdbc7ef</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+* Closing connection 0
+root@12308:/home/shopapp/app# sudo nginx -t nginx -t
+sudo systemctl status nginx
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+● nginx.service - A high performance web server and a reverse proxy server
+     Loaded: loaded (/lib/systemd/system/nginx.service; enabled; vendor preset: enabled)
+     Active: active (running) since Sun 2025-12-07 10:38:06 UTC; 1 week 3 days ago
+       Docs: man:nginx(8)
+   Main PID: 44507 (nginx)
+      Tasks: 2 (limit: 1012)
+     Memory: 6.3M
+        CPU: 15.944s
+     CGroup: /system.slice/nginx.service
+             ├─44507 "nginx: master process /usr/sbin/nginx -g daemon on; master_process on;"
+             └─66002 "nginx: worker process" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "">
+
+Dec 07 10:38:06 12308 systemd[1]: nginx.service: Deactivated successfully.
+Dec 07 10:38:06 12308 systemd[1]: Stopped A high performance web server and a reverse proxy server.
+Dec 07 10:38:06 12308 systemd[1]: Starting A high performance web server and a reverse proxy server...
+Dec 07 10:38:06 12308 systemd[1]: Started A high performance web server and a reverse proxy server.
+Dec 07 10:39:00 12308 systemd[1]: Reloading A high performance web server and a reverse proxy server...
+Dec 07 10:39:00 12308 systemd[1]: Reloaded A high performance web server and a reverse proxy server.
+Dec 08 17:59:26 12308 systemd[1]: Reloading A high performance web server and a reverse proxy server...
+Dec 08 17:59:26 12308 systemd[1]: Reloaded A high performance web server and a reverse proxy server.
+
+root@12308:/home/shopapp/app# sudo tail -50 /var/log/nginx/shop_error.log
+sudo tail -50 /var/log/nginx/shop_access.log
+2025/12/17 03:10:20 [crit] 66002#66002: *16505 SSL_do_handshake() failed (SSL: error:0A00006C:SSL routines::bad key share) while SSL handshaking, client: 123.145.20.24, server: 0.0.0.0:443
+2025/12/17 08:48:14 [crit] 66002#66002: *17086 SSL_do_handshake() failed (SSL: error:0A00006C:SSL routines::bad key share) while SSL handshaking, client: 143.110.150.166, server: 0.0.0.0:443
+94.158.61.176 - - [17/Dec/2025:18:58:33 +0000] "GET /api/config HTTP/1.1" 499 0 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:18:58:33 +0000] "GET /sitemap.xml HTTP/1.1" 304 0 "-" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:18:58:33 +0000] "GET /sitemap.xml HTTP/1.1" 304 0 "-" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:18:58:34 +0000] "GET /api/auth/me HTTP/1.1" 200 229 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:18:58:34 +0000] "GET /api/config HTTP/1.1" 200 2231 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:18:58:34 +0000] "GET /sitemap.xml HTTP/1.1" 304 0 "-" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:18:58:34 +0000] "GET /sitemap.xml HTTP/1.1" 304 0 "-" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:18:58:35 +0000] "GET /api/auth/me HTTP/1.1" 200 229 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:18:58:35 +0000] "GET /api/config HTTP/1.1" 499 0 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:18:58:35 +0000] "GET /api/auth/me HTTP/1.1" 200 229 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:18:58:35 +0000] "GET /api/config HTTP/1.1" 200 2231 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:18:58:36 +0000] "GET /config/logo.svg HTTP/1.1" 304 0 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:18:58:36 +0000] "GET /api/cart/0b0ccdde-b773-46e2-bb76-f013d3d9d122 HTTP/1.1" 200 3 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:18:58:36 +0000] "GET /api/favorites/0b0ccdde-b773-46e2-bb76-f013d3d9d122 HTTP/1.1" 200 3 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:19:02:10 +0000] "GET / HTTP/1.1" 200 546 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+94.158.61.176 - - [17/Dec/2025:19:02:10 +0000] "GET / HTTP/1.1" 304 0 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+94.158.61.176 - - [17/Dec/2025:19:02:10 +0000] "GET /api/auth/me HTTP/1.1" 200 229 "https://monvoir.shop/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+94.158.61.176 - - [17/Dec/2025:19:02:11 +0000] "GET /api/config HTTP/1.1" 200 2231 "https://monvoir.shop/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+94.158.61.176 - - [17/Dec/2025:19:02:11 +0000] "GET /api/orders HTTP/1.1" 200 6478 "https://monvoir.shop/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+94.158.61.176 - - [17/Dec/2025:19:02:11 +0000] "GET /api/categories HTTP/1.1" 200 809 "https://monvoir.shop/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+94.158.61.176 - - [17/Dec/2025:19:02:11 +0000] "GET /api/products HTTP/1.1" 200 14487 "https://monvoir.shop/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+94.158.61.176 - - [17/Dec/2025:19:02:11 +0000] "GET /config/logo.svg HTTP/1.1" 304 0 "https://monvoir.shop/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+94.158.61.176 - - [17/Dec/2025:19:02:11 +0000] "GET /api/favorites/0b0ccdde-b773-46e2-bb76-f013d3d9d122 HTTP/1.1" 200 3 "https://monvoir.shop/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+94.158.61.176 - - [17/Dec/2025:19:02:11 +0000] "GET /api/cart/0b0ccdde-b773-46e2-bb76-f013d3d9d122 HTTP/1.1" 200 3 "https://monvoir.shop/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+94.158.61.176 - - [17/Dec/2025:19:02:11 +0000] "GET /config/logo.svg HTTP/1.1" 304 0 "https://monvoir.shop/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+94.158.61.176 - - [17/Dec/2025:19:02:11 +0000] "POST /api/products/availability HTTP/1.1" 200 2082 "https://monvoir.shop/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+94.158.61.176 - - [17/Dec/2025:19:02:12 +0000] "GET /sitemap.xml HTTP/1.1" 200 546 "-" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:19:02:13 +0000] "GET /api/auth/me HTTP/1.1" 200 229 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:19:02:13 +0000] "GET /config/logo.svg HTTP/1.1" 304 0 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:19:02:13 +0000] "GET /api/config HTTP/1.1" 200 2231 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:19:02:13 +0000] "GET /api/cart/0b0ccdde-b773-46e2-bb76-f013d3d9d122 HTTP/1.1" 200 3 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:19:02:13 +0000] "GET /api/favorites/0b0ccdde-b773-46e2-bb76-f013d3d9d122 HTTP/1.1" 200 3 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:19:02:14 +0000] "GET /sitemap.xml HTTP/1.1" 304 0 "-" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:19:02:14 +0000] "GET /api/auth/me HTTP/1.1" 200 229 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:19:02:14 +0000] "GET /api/config HTTP/1.1" 200 2231 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:19:02:14 +0000] "GET /config/logo.svg HTTP/1.1" 304 0 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:19:02:14 +0000] "GET /api/favorites/0b0ccdde-b773-46e2-bb76-f013d3d9d122 HTTP/1.1" 200 3 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:19:02:14 +0000] "GET /api/cart/0b0ccdde-b773-46e2-bb76-f013d3d9d122 HTTP/1.1" 200 3 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:19:02:15 +0000] "GET /sitemap.xml HTTP/1.1" 304 0 "-" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:19:02:15 +0000] "GET /api/auth/me HTTP/1.1" 200 229 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:19:02:16 +0000] "GET /api/config HTTP/1.1" 200 2231 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:19:02:16 +0000] "GET /config/logo.svg HTTP/1.1" 304 0 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:19:02:16 +0000] "GET /api/favorites/0b0ccdde-b773-46e2-bb76-f013d3d9d122 HTTP/1.1" 200 3 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:19:02:16 +0000] "GET /api/cart/0b0ccdde-b773-46e2-bb76-f013d3d9d122 HTTP/1.1" 200 3 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+94.158.61.176 - - [17/Dec/2025:19:02:17 +0000] "GET /sitemap.xml HTTP/1.1" 304 0 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+94.158.61.176 - - [17/Dec/2025:19:02:17 +0000] "GET /api/auth/me HTTP/1.1" 200 229 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+94.158.61.176 - - [17/Dec/2025:19:02:18 +0000] "GET /api/config HTTP/1.1" 200 2231 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+94.158.61.176 - - [17/Dec/2025:19:02:18 +0000] "GET /api/favorites/0b0ccdde-b773-46e2-bb76-f013d3d9d122 HTTP/1.1" 200 3 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+94.158.61.176 - - [17/Dec/2025:19:02:18 +0000] "GET /api/cart/0b0ccdde-b773-46e2-bb76-f013d3d9d122 HTTP/1.1" 200 3 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+94.158.61.176 - - [17/Dec/2025:19:02:18 +0000] "GET /config/logo.svg HTTP/1.1" 304 0 "https://monvoir.shop/sitemap.xml" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+root@12308:/home/shopapp/app# cat /etc/nginx/sites-enabled/shop
+server {
+    server_name monvoir.shop www.monvoir.shop;
+
+    # Логи
+    access_log /var/log/nginx/shop_access.log;
+    error_log /var/log/nginx/shop_error.log;
+
+    # Статические файлы (frontend)
+    location / {
+        root /home/shopapp/app/dist/public;
+        try_files $uri $uri/ /index.html;
+        add_header Cache-Control "public, max-age=3600";
+    }
+
+    # API запросы к Flask
+    location /api/ {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Конфигурация из settings.json
+    location /config/ {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/monvoir.shop/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/monvoir.shop/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+
+}
+server {
+    if ($host = www.monvoir.shop) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    if ($host = monvoir.shop) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    listen 80;
+    server_name monvoir.shop www.monvoir.shop;
+    return 404; # managed by Certbot
+
+
+
+
+}root@12308:/home/shopapp/app#
