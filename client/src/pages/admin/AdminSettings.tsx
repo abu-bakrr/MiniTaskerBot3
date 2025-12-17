@@ -113,8 +113,8 @@ export default function AdminSettings() {
   const [smtpPassword, setSmtpPassword] = useState('');
   const [showSmtpPassword, setShowSmtpPassword] = useState(false);
   
-  const [deliveryDaysInStock, setDeliveryDaysInStock] = useState<number>(3);
-  const [deliveryDaysBackorder, setDeliveryDaysBackorder] = useState<number>(14);
+  const [deliveryDaysInStock, setDeliveryDaysInStock] = useState<string>('3');
+  const [deliveryDaysBackorder, setDeliveryDaysBackorder] = useState<string>('14');
   
   const [saving, setSaving] = useState<string | null>(null);
   const [testing, setTesting] = useState<string | null>(null);
@@ -161,8 +161,8 @@ export default function AdminSettings() {
       }
       if (deliveryRes.ok) {
         const data = await deliveryRes.json();
-        setDeliveryDaysInStock(data.delivery_days_in_stock || 3);
-        setDeliveryDaysBackorder(data.delivery_days_backorder || 14);
+        setDeliveryDaysInStock(String(data.delivery_days_in_stock || 3));
+        setDeliveryDaysBackorder(String(data.delivery_days_backorder || 14));
       }
     } catch (error) {
       console.error('Failed to load settings:', error);
@@ -393,8 +393,8 @@ export default function AdminSettings() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          delivery_days_in_stock: deliveryDaysInStock,
-          delivery_days_backorder: deliveryDaysBackorder
+          delivery_days_in_stock: parseInt(deliveryDaysInStock) || 3,
+          delivery_days_backorder: parseInt(deliveryDaysBackorder) || 14
         })
       });
       
@@ -1178,11 +1178,10 @@ export default function AdminSettings() {
                   <Label htmlFor="delivery_days_in_stock">Срок доставки (товары в наличии)</Label>
                   <Input
                     id="delivery_days_in_stock"
-                    type="number"
-                    min="1"
-                    max="90"
-                    value={deliveryDaysInStock || ''}
-                    onChange={(e) => setDeliveryDaysInStock(e.target.value === '' ? 0 : parseInt(e.target.value))}
+                    type="text"
+                    inputMode="numeric"
+                    value={deliveryDaysInStock}
+                    onChange={(e) => setDeliveryDaysInStock(e.target.value.replace(/[^0-9]/g, ''))}
                     placeholder="3"
                     className="w-full"
                   />
@@ -1195,11 +1194,10 @@ export default function AdminSettings() {
                   <Label htmlFor="delivery_days_backorder">Срок доставки (товары под заказ)</Label>
                   <Input
                     id="delivery_days_backorder"
-                    type="number"
-                    min="1"
-                    max="90"
-                    value={deliveryDaysBackorder || ''}
-                    onChange={(e) => setDeliveryDaysBackorder(e.target.value === '' ? 0 : parseInt(e.target.value))}
+                    type="text"
+                    inputMode="numeric"
+                    value={deliveryDaysBackorder}
+                    onChange={(e) => setDeliveryDaysBackorder(e.target.value.replace(/[^0-9]/g, ''))}
                     placeholder="14"
                     className="w-full"
                   />
