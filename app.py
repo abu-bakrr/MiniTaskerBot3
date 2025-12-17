@@ -4200,42 +4200,50 @@ def sitemap():
     try:
         host = request.host_url.rstrip('/')
         
-        conn = get_db_connection()
-        cur = conn.cursor()
-        
-        cur.execute('SELECT id FROM products')
-        products = cur.fetchall()
-        
-        categories = []
-        try:
-            cur.execute('SELECT id FROM categories')
-            categories = cur.fetchall()
-        except Exception:
-            pass
-        
-        cur.close()
-        
         xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
         xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
         
         xml += f'  <url>\n    <loc>{host}/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n'
         
-        for cat in categories:
-            xml += f'  <url>\n    <loc>{host}/?category={cat["id"]}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n'
+        try:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            
+            cur.execute('SELECT id FROM products')
+            products = cur.fetchall()
+            
+            for product in products:
+                xml += f'  <url>\n    <loc>{host}/product/{product["id"]}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>\n'
+            
+            cur.close()
+        except Exception as db_err:
+            print(f"Sitemap DB error: {db_err}")
+        finally:
+            if conn:
+                conn.close()
+                conn = None
         
-        for product in products:
-            xml += f'  <url>\n    <loc>{host}/product/{product["id"]}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>\n'
+        config = load_config()
+        categories_list = config.get('categories', [])
+        for cat in categories_list:
+            cat_id = cat.get('id', '')
+            if cat_id:
+                xml += f'  <url>\n    <loc>{host}/?category={cat_id}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n'
         
         xml += '</urlset>'
         
         response = app.response_class(response=xml, status=200, mimetype='application/xml')
+        response.headers['Content-Type'] = 'application/xml; charset=utf-8'
         return response
     except Exception as e:
         print(f"Sitemap error: {e}")
-        return '', 500
-    finally:
-        if conn:
-            conn.close()
+        xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+        xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        xml += f'  <url>\n    <loc>{request.host_url.rstrip("/")}/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n'
+        xml += '</urlset>'
+        response = app.response_class(response=xml, status=200, mimetype='application/xml')
+        response.headers['Content-Type'] = 'application/xml; charset=utf-8'
+        return response
 
 # SEO: Robots.txt
 @app.route('/robots.txt')
