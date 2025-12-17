@@ -143,8 +143,9 @@ export default function AdminCategories() {
                 <Label>Порядок сортировки</Label>
                 <Input
                   type="number"
-                  value={formData.sort_order}
-                  onChange={(e) => setFormData({ ...formData, sort_order: parseInt(e.target.value) || 0 })}
+                  value={formData.sort_order === 0 ? '' : formData.sort_order}
+                  onChange={(e) => setFormData({ ...formData, sort_order: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                  placeholder="0"
                 />
               </div>
               <div className="flex justify-end gap-2">

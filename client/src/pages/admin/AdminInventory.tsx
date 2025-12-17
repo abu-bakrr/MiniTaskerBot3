@@ -348,8 +348,9 @@ export default function AdminInventory() {
                   <Input 
                     type="number" 
                     min="0"
-                    value={formData.quantity}
-                    onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
+                    value={formData.quantity === 0 ? '' : formData.quantity}
+                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                    placeholder="0"
                   />
                 </div>
                 
@@ -453,8 +454,9 @@ export default function AdminInventory() {
                         <Input 
                           type="number"
                           className="w-24"
-                          value={editingItem.quantity}
-                          onChange={(e) => setEditingItem({ ...editingItem, quantity: parseInt(e.target.value) || 0 })}
+                          value={editingItem.quantity === 0 ? '' : editingItem.quantity}
+                          onChange={(e) => setEditingItem({ ...editingItem, quantity: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                          placeholder="0"
                         />
                       ) : (
                         <span className={item.quantity === 0 ? "text-destructive font-semibold" : ""}>
@@ -537,8 +539,9 @@ export default function AdminInventory() {
                               <Input 
                                 type="number"
                                 className="w-16 h-7 text-sm inline-block"
-                                value={editingItem.quantity}
-                                onChange={(e) => setEditingItem({ ...editingItem, quantity: parseInt(e.target.value) || 0 })}
+                                value={editingItem.quantity === 0 ? '' : editingItem.quantity}
+                                onChange={(e) => setEditingItem({ ...editingItem, quantity: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                                placeholder="0"
                               />
                             ) : (
                               <span className={`font-medium ${item.quantity === 0 ? "text-destructive" : ""}`}>

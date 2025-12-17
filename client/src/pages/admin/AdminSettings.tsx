@@ -1181,8 +1181,8 @@ export default function AdminSettings() {
                     type="number"
                     min="1"
                     max="90"
-                    value={deliveryDaysInStock}
-                    onChange={(e) => setDeliveryDaysInStock(parseInt(e.target.value) || 3)}
+                    value={deliveryDaysInStock || ''}
+                    onChange={(e) => setDeliveryDaysInStock(e.target.value === '' ? 0 : parseInt(e.target.value))}
                     placeholder="3"
                     className="w-full"
                   />
@@ -1198,8 +1198,8 @@ export default function AdminSettings() {
                     type="number"
                     min="1"
                     max="90"
-                    value={deliveryDaysBackorder}
-                    onChange={(e) => setDeliveryDaysBackorder(parseInt(e.target.value) || 14)}
+                    value={deliveryDaysBackorder || ''}
+                    onChange={(e) => setDeliveryDaysBackorder(e.target.value === '' ? 0 : parseInt(e.target.value))}
                     placeholder="14"
                     className="w-full"
                   />
