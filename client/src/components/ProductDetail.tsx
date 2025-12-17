@@ -266,26 +266,36 @@ export default function ProductDetail({
             >
               {formatPrice(price)}
             </p>
-            {hasInventoryTracking && (
-              <div className="mt-2">
-                {currentInventory && currentInventory.quantity > 0 ? (
-                  <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
-                    <Package className="w-3 h-3" />
-                    <span>В наличии</span>
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
-                    <Clock className="w-3 h-3" />
-                    <span>
-                      Под заказ
-                      {currentInventory?.backorder_lead_time_days && (
-                        <span className="ml-1">({currentInventory.backorder_lead_time_days} дн.)</span>
-                      )}
+            {(() => {
+              const hasColors = colors && colors.length > 0;
+              const hasAttributes = attributes && attributes.length > 0;
+              const colorSelected = !hasColors || selectedColor;
+              const allAttributesSelected = !hasAttributes || 
+                attributes.every(attr => selectedAttributes[attr.name]);
+              const combinationSelected = colorSelected && allAttributesSelected;
+              
+              if (!combinationSelected) return null;
+              
+              if (currentInventory && currentInventory.quantity > 0) {
+                return (
+                  <div className="mt-2">
+                    <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                      <Package className="w-3 h-3" />
+                      <span>В наличии</span>
                     </span>
-                  </span>
-                )}
-              </div>
-            )}
+                  </div>
+                );
+              } else {
+                return (
+                  <div className="mt-2">
+                    <span className="inline-flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                      <Clock className="w-3 h-3" />
+                      <span>Под заказ</span>
+                    </span>
+                  </div>
+                );
+              }
+            })()}
           </div>
 
           <div className="border-t pt-4">
