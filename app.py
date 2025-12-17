@@ -859,9 +859,9 @@ def get_product_availability(product_id):
         conn.close()
         
         if not inventory_records:
-            # No inventory records - product not tracked
+            # No inventory records - default to backorder
             return jsonify({
-                'status': 'not_tracked',
+                'status': 'backorder',
                 'in_stock': False,
                 'total_quantity': 0,
                 'backorder_lead_time_days': None
@@ -917,7 +917,7 @@ def get_products_availability():
             
             if not inventory_records:
                 result[product_id] = {
-                    'status': 'not_tracked',
+                    'status': 'backorder',
                     'in_stock': False,
                     'total_quantity': 0,
                     'backorder_lead_time_days': None
