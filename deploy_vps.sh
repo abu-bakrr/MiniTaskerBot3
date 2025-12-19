@@ -259,11 +259,19 @@ print_step "Установка зависимостей и сборка прил
 cd $APP_DIR
 
 # Установка Node.js зависимостей и сборка фронтенда
+print_step "Установка Node.js зависимостей..."
 sudo -u $APP_USER bash <<EOF
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 cd $APP_DIR
-npm install
-npm run build
+npm install || (print_error "npm install failed" && exit 1)
+npm run build || (print_error "npm run build failed" && exit 1)
 EOF
+
+if [ $? -ne 0 ]; then
+    print_error "Ошибка при сборке Node.js зависимостей"
+    exit 1
+fi
+print_step "Node.js зависимости установлены и фронтенд собран"
 
 # Создание виртуального окружения и установка Python зависимостей
 sudo -u $APP_USER bash <<EOF

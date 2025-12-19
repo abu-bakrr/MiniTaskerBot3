@@ -111,7 +111,8 @@ echo ""
 echo "⚠️  Удаленный доступ позволит подключаться к БД с другого компьютера"
 echo "   (например, для запуска Telegram бота локально)"
 echo ""
-read -p "Открыть удаленный доступ к PostgreSQL? (yes/no): " ENABLE_REMOTE_DB
+read -p "Открыть удаленный доступ к PostgreSQL? (yes/no) [no]: " ENABLE_REMOTE_DB
+ENABLE_REMOTE_DB=${ENABLE_REMOTE_DB:-no}
 
 if [ "$ENABLE_REMOTE_DB" = "yes" ]; then
     print_step "Настройка PostgreSQL для удаленного доступа..."
@@ -195,9 +196,11 @@ chmod 600 "$APP_DIR/.env"
 print_step "Установка зависимостей и сборка..."
 cd "$APP_DIR"
 
-# Node.js
-sudo -u "$APP_USER" bash -c "cd $APP_DIR && npm install --quiet" 2>/dev/null
-sudo -u "$APP_USER" bash -c "cd $APP_DIR && npm run build" 2>/dev/null
+# Node.js (используем полный путь к npm)
+sudo -u "$APP_USER" bash -c "cd $APP_DIR && /usr/bin/npm install --quiet" 2>/dev/null || \
+    sudo -u "$APP_USER" bash -c "cd $APP_DIR && npm install --quiet" || print_error "npm install не удалось выполнить"
+sudo -u "$APP_USER" bash -c "cd $APP_DIR && /usr/bin/npm run build" 2>/dev/null || \
+    sudo -u "$APP_USER" bash -c "cd $APP_DIR && npm run build" || print_error "npm run build не удалось выполнить"
 
 # Python
 sudo -u "$APP_USER" bash -c "cd $APP_DIR && python3 -m venv venv"
