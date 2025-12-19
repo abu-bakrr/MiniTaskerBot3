@@ -1,12 +1,20 @@
 # Universal E-Commerce Website Template
 
+## ⚠️ DEPLOYMENT: VPS ONLY
+
+**This project is designed for VPS deployment. All development and production environments are deployed on a self-hosted VPS.** Replit is used only as a development environment. Do not use Replit's native publishing/deployment features.
+
 ## Overview
 
-This project provides a universal, configurable template for creating e-commerce websites. Its primary purpose is to enable users to set up an online shop by modifying JSON configuration files, eliminating the need for code changes. Key capabilities include a responsive design optimized for both mobile and desktop, customizable color palettes, and modern web interactions. The template aims to simplify the creation and deployment of e-commerce solutions on VPS servers, offering a robust and flexible platform for various businesses.
+This project provides a universal, configurable template for creating e-commerce websites. Its primary purpose is to enable users to set up an online shop by modifying JSON configuration files, eliminating the need for code changes. Key capabilities include a responsive design optimized for both mobile and desktop, customizable color palettes, and modern web interactions. The template is fully optimized for VPS deployment with automated scripts, Nginx reverse proxy, and systemd service management.
 
 ## User Preferences
 
-I prefer iterative development with clear, concise explanations at each step. I like clean, functional code and expect the agent to ask before making any significant architectural or design changes. Do not make changes to files within the `docs/` folder.
+- **Deployment Preference:** VPS (self-hosted) - not Replit native deployment
+- Development approach: Iterative development with clear, concise explanations at each step
+- Code quality: Clean, functional code with request for approval before significant architectural/design changes
+- **Documentation:** Do not make changes to files within the `docs/` folder
+- All changes are pushed to GitHub for VPS deployment via automated deployment scripts
 
 ## System Architecture
 
