@@ -258,19 +258,24 @@ print_step "Файл .env создан"
 print_step "Установка зависимостей и сборка приложения..."
 cd $APP_DIR
 
-# Установка Node.js зависимостей и сборка фронтенда
+# Установка Node.js зависимостей и сборка фронтенда (как root)
 print_step "Установка Node.js зависимостей..."
-sudo -u $APP_USER bash <<EOF
-export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 cd $APP_DIR
-npm install || (print_error "npm install failed" && exit 1)
-npm run build || (print_error "npm run build failed" && exit 1)
-EOF
-
-if [ $? -ne 0 ]; then
-    print_error "Ошибка при сборке Node.js зависимостей"
+npm install 2>&1 | head -20
+if [ ${PIPESTATUS[0]} -ne 0 ]; then
+    print_error "npm install failed"
     exit 1
 fi
+
+print_step "Сборка фронтенда..."
+npm run build 2>&1 | head -20
+if [ ${PIPESTATUS[0]} -ne 0 ]; then
+    print_error "npm run build failed"
+    exit 1
+fi
+
+# Установка правильных прав после сборки
+chown -R $APP_USER:$APP_USER $APP_DIR/node_modules $APP_DIR/dist 2>/dev/null || true
 print_step "Node.js зависимости установлены и фронтенд собран"
 
 # Создание виртуального окружения и установка Python зависимостей
