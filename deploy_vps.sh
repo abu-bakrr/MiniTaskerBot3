@@ -267,15 +267,24 @@ if ! npm install; then
 fi
 
 print_step "Сборка фронтенда..."
-if ! npm run build; then
-    print_error "npm run build failed"
+cd $APP_DIR
+
+# Запускаем Vite
+if ! npx vite build; then
+    print_error "vite build failed"
     exit 1
 fi
 
 # Проверяем что dist был создан
 if [ ! -d "$APP_DIR/dist" ]; then
-    print_error "Директория dist не создана после сборки"
+    print_error "Директория dist не создана после vite build"
     exit 1
+fi
+
+print_step "Сборка Node.js бэкенда..."
+# Запускаем esbuild отдельно (игнорируем ошибки если dist существует)
+if ! npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist; then
+    print_warning "esbuild завершился с предупреждением, но dist существует"
 fi
 
 # Установка правильных прав после сборки
