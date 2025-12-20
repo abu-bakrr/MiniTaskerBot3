@@ -261,16 +261,20 @@ cd $APP_DIR
 # Установка Node.js зависимостей и сборка фронтенда (как root)
 print_step "Установка Node.js зависимостей..."
 cd $APP_DIR
-npm install 2>&1 | head -20
-if [ ${PIPESTATUS[0]} -ne 0 ]; then
+if ! npm install; then
     print_error "npm install failed"
     exit 1
 fi
 
 print_step "Сборка фронтенда..."
-npm run build 2>&1 | head -20
-if [ ${PIPESTATUS[0]} -ne 0 ]; then
+if ! npm run build; then
     print_error "npm run build failed"
+    exit 1
+fi
+
+# Проверяем что dist был создан
+if [ ! -d "$APP_DIR/dist" ]; then
+    print_error "Директория dist не создана после сборки"
     exit 1
 fi
 
