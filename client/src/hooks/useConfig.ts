@@ -4,6 +4,13 @@ export interface AppConfig {
   shopName: string;
   description: string;
   logo: string;
+  seo?: {
+    title?: string;
+    description?: string;
+    keywords?: string;
+    siteUrl?: string;
+    language?: string;
+  };
   currency: {
     symbol: string;
     code: string;

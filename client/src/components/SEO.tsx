@@ -119,13 +119,16 @@ export function OrganizationSchema() {
   useEffect(() => {
     if (!config) return;
     
+    const logoUrl = config.logo?.startsWith('http') ? config.logo : `${siteUrl}${config.logo}`;
+    
     const orgSchema = {
       '@context': 'https://schema.org',
       '@type': 'Organization',
       name: config.shopName,
       description: config.description,
       url: siteUrl,
-      logo: config.logo?.startsWith('http') ? config.logo : `${siteUrl}${config.logo}`
+      logo: logoUrl,
+      image: logoUrl
     };
     
     let scriptElement = document.querySelector('script[data-schema="organization"]') as HTMLScriptElement;
@@ -139,6 +142,40 @@ export function OrganizationSchema() {
     
     return () => {
       const schema = document.querySelector('script[data-schema="organization"]');
+      if (schema) schema.remove();
+    };
+  }, [config, siteUrl]);
+  
+  return null;
+}
+
+export function ShopSchema() {
+  const { config } = useConfig();
+  const siteUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  
+  useEffect(() => {
+    if (!config) return;
+    
+    const shopSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: config.shopName,
+      url: siteUrl,
+      description: config.description,
+      image: config.logo?.startsWith('http') ? config.logo : `${siteUrl}${config.logo}`
+    };
+    
+    let scriptElement = document.querySelector('script[data-schema="website"]') as HTMLScriptElement;
+    if (!scriptElement) {
+      scriptElement = document.createElement('script');
+      scriptElement.setAttribute('type', 'application/ld+json');
+      scriptElement.setAttribute('data-schema', 'website');
+      document.head.appendChild(scriptElement);
+    }
+    scriptElement.textContent = JSON.stringify(shopSchema);
+    
+    return () => {
+      const schema = document.querySelector('script[data-schema="website"]');
       if (schema) schema.remove();
     };
   }, [config, siteUrl]);

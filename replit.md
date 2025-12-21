@@ -85,6 +85,7 @@ The system includes a comprehensive admin panel accessible at `/admin`:
 
 All shop settings are centralized in `config/settings.json`, covering:
 - `shopName`, `description`, `logo`
+- `seo`: SEO metadata including `title`, `description`, `keywords`, `siteUrl`, `language` — used for search engine optimization and social sharing
 - `currency`: `symbol`, `code`, `position`
 - `managerContact`: Telegram handle
 - `colorScheme`: Customizable pastel palette (e.g., `background`, `foreground`, `primary`)
@@ -93,6 +94,28 @@ All shop settings are centralized in `config/settings.json`, covering:
 - `texts`: Customizable UI labels
 - `fonts`: `fontFamily`, `fontFile`, `productName` (weight), `price` (weight), `description` (weight)
 - `logoSize`: Configurable logo display size
+
+### SEO Optimization
+
+The system automatically generates SEO-optimized content for search engines and social media:
+
+**Homepage Meta Tags:**
+- Uses `seo.title` and `seo.description` from config/settings.json
+- Generates Organization and WebSite Schema.org structures
+- Logo from config is used as favicon and OG image
+
+**Product Pages:**
+- Dynamic meta titles using product names: `[Product Name] | [Shop Name]`
+- Product descriptions automatically used as meta descriptions
+- Product images as Open Graph images for social sharing
+- Full Product Schema.org structure for rich search results
+- Price and availability information embedded for search engines
+
+**Benefits:**
+- Improved Google search ranking for product queries (e.g., searching "paltò" shows your product with image/description)
+- Social media preview cards when sharing links
+- Rich search results with product details, price, and images
+- Better indexing for brand name searches
 
 ### Inventory & Delivery Settings
 

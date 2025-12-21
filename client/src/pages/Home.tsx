@@ -5,7 +5,8 @@ import Header from "@/components/Header";
 import FilterBar from "@/components/FilterBar";
 import ProductGrid from "@/components/ProductGrid";
 import Pagination from "@/components/Pagination";
-import SEO from "@/components/SEO";
+import SEO, { ShopSchema } from "@/components/SEO";
+import { useConfig } from "@/hooks/useConfig";
 import { Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -57,6 +58,7 @@ export default function Home({
 }: HomeProps) {
   const [, setLocation] = useLocation();
   const searchString = useSearch();
+  const { config } = useConfig();
   
   // Parse URL parameters
   const getUrlParams = useCallback(() => {
@@ -244,7 +246,13 @@ export default function Home({
 
   return (
     <div className="min-h-screen bg-background">
-      <SEO />
+      <SEO 
+        title={config?.seo?.title || config?.shopName}
+        description={config?.seo?.description || config?.description}
+        image={config?.logo}
+        type="website"
+      />
+      <ShopSchema />
       <Header
         onCartClick={onCartClick}
         onFavoritesClick={onFavoritesClick}
